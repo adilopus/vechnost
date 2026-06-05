@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ВЕЧНОСТЬ</title>
+    
+    <!-- PWA мета-теги -->
     <meta name="theme-color" content="#03050a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ВЕЧНОСТЬ">
-    <link rel="manifest" href="data:application/manifest+json,{}" id="manifestLink">
+    <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" id="dynamicFavicon">
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body { overflow: hidden; background: #03050a; font-family: system-ui, 'Segoe UI', 'Inter', sans-serif; }
@@ -93,630 +96,576 @@
 </div>
 
 <script>
-(function(){
-    // ========== PWA ==========
-    function generateIcon(size) {
-        const c = document.createElement('canvas');
-        c.width = c.height = size;
-        const x = c.getContext('2d');
-        x.fillStyle = "#03050a";
-        x.fillRect(0, 0, size, size);
-        x.font = `${size * 0.55}px 'Segoe UI', 'Montserrat', 'Times New Roman', serif`;
-        x.textAlign = "center";
-        x.textBaseline = "middle";
-        x.fillStyle = "#FFFFFF";
-        x.shadowBlur = size * 0.06;
-        x.shadowColor = "rgba(255,255,200,0.8)";
-        x.fillText("∞", size/2, size/2);
-        x.shadowBlur = 0;
-        return c.toDataURL('image/png');
-    }
-    
-    const iconSizes = [72, 96, 128, 144, 152, 192, 256, 384, 512];
-    const manifest = {
-        name: "ВЕЧНОСТЬ", short_name: "Вечность", description: "Звёздная сингулярность с музыкой",
-        start_url: ".", display: "standalone", theme_color: "#03050a", background_color: "#03050a",
-        icons: iconSizes.map(s => ({ src: generateIcon(s), sizes: `${s}x${s}`, type: "image/png" }))
-    };
-    document.getElementById('manifestLink').href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type: 'application/json'}));
-    
-    if ('serviceWorker' in navigator) {
-        const swCode = `self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open('vechnost-v1').then(c => c.addAll(['/']))); });
-self.addEventListener('fetch', e => { e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))); });`;
-        navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode], {type: 'application/javascript'})));
-    }
-    
-    function createFavicon() {
-        const c = document.createElement('canvas');
-        c.width = c.height = 64;
-        const x = c.getContext('2d');
-        x.clearRect(0, 0, 64, 64);
-        x.font = "bold 48px 'Segoe UI', 'Montserrat', 'Times New Roman', serif";
-        x.textAlign = "center";
-        x.textBaseline = "middle";
-        x.fillStyle = "#FFFFFF";
-        x.shadowBlur = 4;
-        x.shadowColor = "rgba(255,255,200,0.8)";
-        x.fillText("∞", 32, 34);
-        x.shadowBlur = 0;
-        document.getElementById('dynamicFavicon').href = c.toDataURL('image/png');
-    }
-    createFavicon();
-    
-    // ========== ПОЛНЫЙ СПИСОК РАДИОСТАНЦИЙ (ВСЕ 170+ ИЗ ФАЙЛА) ==========
-    const stationsCompact = [
-        "DFM|http://dfm.hostingradio.ru/dfm96.aacp|Поп/Top 40",
-        "Европа Плюс 320|http://europaplus.hostingradio.ru:8014/europaplus320.mp3|Поп/Top 40",
-        "Радио Energy|http://online-2.gkvr.ru:8000/energy_nsb_64.aac|Поп/Top 40",
-        "Maximum|http://23.105.238.4/maximum96.aacp|Рок",
-        "Детское радио|http://23.105.238.4/gpm-detifm495.aacp|Детское",
-        "Русский Хит|http://stream2.ruhit.fm:9000/19_ruhit_128_reg_1|Поп",
-        "Comedy Радио|http://online-2.gkvr.ru:8000/comedy_nsb_64.aac|Камеди",
-        "Радио Ретро Хит|http://air.volna.top/Retro|Ретро/Диско",
-        "Дорожное радио|http://dorognoe.hostingradio.ru:8000/dorognoe|Шансон/Дорожная",
-        "Европа Плюс|http://ep128.hostingradio.ru:8030/ep128|Поп/Top 40",
-        "Европа Плюс (Топ 40)|http://eptop128server.streamr.ru:8033/eptop128|Поп/Top 40",
-        "РетроФМ|http://hls-01-retro.emgsound.ru/12/128/playlist.m3u8|Ретро",
-        "Вести ФМ|http://icecast.vgtrk.cdnvideo.ru/vestifm_mp3_128kbps|Новости/Разговорное",
-        "Радио дача|http://listen.vdfm.ru:8000/dacha|Шансон/Поп",
-        "90's Eurodance|http://listen1.myradio24.com:9000/5967|Евродэнс 90-х",
-        "Jazz FM 89.1|http://nashe1.hostingradio.ru/jazz-128.mp3|Джаз",
-        "Наше радио|http://nashe1.hostingradio.ru/nashe-128.mp3|Русский рок",
-        "Discover Trance|http://paris.discovertrance.com:8006/;stream.nsv|Транс",
-        "Радио Мелодия (СПБ)|http://stream128.melodiafm.spb.ru:8000/melodia128|Классика/Инструментал",
-        "Zaycev Bass|https://abs.zaycev.fm/bass128k|Bass-музыка",
-        "Zaycev Bass 256|https://abs.zaycev.fm/bass256к|Bass-музыка",
-        "Zaycev Classic|https://abs.zaycev.fm/classic128k|Классическая",
-        "Zaycev Classic 256|https://abs.zaycev.fm/classic256к|Классическая",
-        "Zaycev Club|https://abs.zaycev.fm/club128k|Клубная",
-        "Zaycev Club 256|https://abs.zaycev.fm/club256к|Клубная",
-        "Zaycev Disco|https://abs.zaycev.fm/disco128k|Диско",
-        "Zaycev Disco 256|https://abs.zaycev.fm/disco256к|Диско",
-        "Zaycev Folk|https://abs.zaycev.fm/folk128k|Фолк/Народная",
-        "Zaycev Folk 256|https://abs.zaycev.fm/folk256к|Фолк/Народная",
-        "Zaycev K-Pop|https://abs.zaycev.fm/kpop128k|K-Pop",
-        "Zaycev K-Pop 256|https://abs.zaycev.fm/kpop256к|K-Pop",
-        "Zaycev Love|https://abs.zaycev.fm/love128k|Лирика/Лав",
-        "Zaycev Love 256|https://abs.zaycev.fm/love256к|Лирика/Лав",
-        "Zaycev Metal|https://abs.zaycev.fm/metal128k|Метал",
-        "Zaycev Metal 256|https://abs.zaycev.fm/metal256к|Метал",
-        "Zaycev Pop|https://abs.zaycev.fm/pop128k|Поп",
-        "Zaycev Pop 256|https://abs.zaycev.fm/pop256к|Поп",
-        "Zaycev Rap|https://abs.zaycev.fm/rap128k|Рэп/Хип-хоп",
-        "Zaycev Rap 256|https://abs.zaycev.fm/rap256к|Рэп/Хип-хоп",
-        "Zaycev Relax|https://abs.zaycev.fm/relax128k|Релакс/Чилл",
-        "Zaycev Relax 256|https://abs.zaycev.fm/relax256к|Релакс/Чилл",
-        "Zaycev RnB|https://abs.zaycev.fm/rnb128k|R&B",
-        "Zaycev RnB 256|https://abs.zaycev.fm/rnb256к|R&B",
-        "Zaycev NewRock|https://abs.zaycev.fm/rock128k|Рок",
-        "Zaycev NewRock 256|https://abs.zaycev.fm/rock256к|Рок",
-        "Zaycev РуРок|https://abs.zaycev.fm/rurock128k|Русский рок",
-        "Zaycev РуРок 256|https://abs.zaycev.fm/rurock256к|Русский рок",
-        "Zaycev Rus|https://abs.zaycev.fm/rus128k|Русская поп",
-        "Zaycev Rus 256|https://abs.zaycev.fm/rus256к|Русская поп",
-        "Zaycev Шансон|https://abs.zaycev.fm/shanson128k|Шансон",
-        "Zaycev Шансон 256|https://abs.zaycev.fm/shanson256к|Шансон",
-        "Zaycev Зайчата|https://abs.zaycev.fm/zaychata128k|Детские песни",
-        "Zaycev Зайчата 256|https://abs.zaycev.fm/zaychata256к|Детские песни",
-        "Радио Маяк|https://icecast-vgtrk.cdnvideo.ru/mayakfm_aac_64kbps|Новости/Разговорное",
-        "Радио максимум|https://maximum.hostingradio.ru/maximum128.mp3|Рок/Альтернатива",
-        "Русское Радио|https://rusradio.hostingradio.ru/rusradio128.mp3|Русская поп",
-        "Radio Record «70's Dance»|https://radiorecord.hostingradio.ru/197096.aacp|Танцы 70-х",
-        "Radio Record «Record 80-х»|https://radiorecord.hostingradio.ru/198096.aacp|80-е",
-        "Radio Record «Рекорд 00-х»|https://radiorecord.hostingradio.ru/200096.aacp|00-е",
-        "Radio Record «10's Dance»|https://radiorecord.hostingradio.ru/201096.aacp|Танцы 10-х",
-        "Radio Record «2-step»|https://radiorecord.hostingradio.ru/2step96.aacp|2-step / UK Garage",
-        "Radio Record «Afro House»|https://radiorecord.hostingradio.ru/afro64.aacp|Afro House",
-        "Radio Record «Ambient»|https://radiorecord.hostingradio.ru/ambient96.aacp|Ambient",
-        "Radio Record «Armin van Buuren»|https://radiorecord.hostingradio.ru/armin96.aacp|Транс (Armin)",
-        "Radio Record «A State of Trance»|https://radiorecord.hostingradio.ru/asot64.aacp|Транс (ASOT)",
-        "Radio Record «Beach Party»|https://radiorecord.hostingradio.ru/beach64.aacp|Пляжная вечеринка",
-        "Radio Record «Big Hits»|https://radiorecord.hostingradio.ru/bighits96.aacp|Танцевальные хиты",
-        "Radio Record «Breaks»|https://radiorecord.hostingradio.ru/brks96.aacp|Breaks",
-        "Radio Record «60's Dance»|https://radiorecord.hostingradio.ru/cadillac96.aacp|Танцы 60-х",
-        "Radio Record «Chill-Out»|https://radiorecord.hostingradio.ru/chil96.aacp|Чилл-аут",
-        "Radio Record «Chill House»|https://radiorecord.hostingradio.ru/chillhouse96.aacp|Chill House",
-        "Radio Record «Christmas Chill»|https://radiorecord.hostingradio.ru/christmaschill96.aacp|Рождественский чилл",
-        "Radio Record «Record Classix»|https://radiorecord.hostingradio.ru/classix64.aacp|Классика танца",
-        "Radio Record «EDM»|https://radiorecord.hostingradio.ru/club96.aacp|EDM",
-        "Radio Record «Record Club Show»|https://radiorecord.hostingradio.ru/clubshow64.aacp|Клубное шоу",
-        "Radio Record «Complextro»|https://radiorecord.hostingradio.ru/complextro96.aacp|Complextro",
-        "Radio Record «Darkside»|https://radiorecord.hostingradio.ru/darkside96.aacp|Дарксайд",
-        "Radio Record «Dancecore»|https://radiorecord.hostingradio.ru/dc96.aacp|Дэнскор",
-        "Radio Record «Deep»|https://radiorecord.hostingradio.ru/deep96.aacp|Deep House",
-        "Radio Record «Веснушка FM»|https://radiorecord.hostingradio.ru/deti96.aacp|Детская",
-        "Radio Record «Disco/Funk»|https://radiorecord.hostingradio.ru/discofunk96.aacp|Диско/Фанк",
-        "Radio Record «DJ Gvozd»|https://radiorecord.hostingradio.ru/djgvozd64.aacp|Миксы (DJ Gvozd)",
-        "Radio Record «Dream Dance»|https://radiorecord.hostingradio.ru/dream96.aacp|Dream Dance",
-        "Radio Record «Dream Pop»|https://radiorecord.hostingradio.ru/dreampop96.aacp|Dream Pop",
-        "Radio Record «D'n'B Classics»|https://radiorecord.hostingradio.ru/drumhits96.aacp|DnB Классика",
-        "Radio Record «Dubstep»|https://radiorecord.hostingradio.ru/dub96.aacp|Дабстеп",
-        "Radio Record «EDM Classics»|https://radiorecord.hostingradio.ru/edmhits96.aacp|EDM Классика",
-        "Radio Record «Electro»|https://radiorecord.hostingradio.ru/elect96.aacp|Электро",
-        "Radio Record «Eurodance»|https://radiorecord.hostingradio.ru/eurodance96.aacp|Евродэнс",
-        "Radio Record «Future Bass»|https://radiorecord.hostingradio.ru/fbass96.aacp|Future Bass",
-        "Radio Record «Feel»|https://radiorecord.hostingradio.ru/feel64.aacp|Feel-музыка",
-        "Radio Record «Future House»|https://radiorecord.hostingradio.ru/fut96.aacp|Future House",
-        "Radio Record «Future Rave»|https://radiorecord.hostingradio.ru/futurerave96.aacp|Future Rave",
-        "Radio Record «Гастарбайтер FM»|https://radiorecord.hostingradio.ru/gast96.aacp|Юмор/Пародия",
-        "Radio Record «GOA/PSY»|https://radiorecord.hostingradio.ru/goa96.aacp|Goa/Psytrance",
-        "Radio Record «Record Gold»|https://radiorecord.hostingradio.ru/gold96.aacp|Золото танцев",
-        "Radio Record «Гоп FM»|https://radiorecord.hostingradio.ru/gop96.aacp|Юмор/Пародия",
-        "Radio Record «Groove/Tribal»|https://radiorecord.hostingradio.ru/groovetribal96.aacp|Groove/Tribal",
-        "Radio Record «David Guetta»|https://radiorecord.hostingradio.ru/guetta96.aacp|David Guetta",
-        "Radio Record «Hard Bass»|https://radiorecord.hostingradio.ru/hbass96.aacp|Hard Bass",
-        "Radio Record «House Classics»|https://radiorecord.hostingradio.ru/houseclss96.aacp|House Классика",
-        "Radio Record «House Hits»|https://radiorecord.hostingradio.ru/househits96.aacp|House Хиты",
-        "Radio Record «На Хайпе»|https://radiorecord.hostingradio.ru/hype96.aacp|Хайп/Тренды",
-        "Radio Record «Hypnotic»|https://radiorecord.hostingradio.ru/hypno96.aacp|Hypnotic",
-        "Radio Record «Innocence»|https://radiorecord.hostingradio.ru/ibiza96.aacp|Ибица/Лаунж",
-        "Radio Record «Bass House»|https://radiorecord.hostingradio.ru/jackin96.aacp|Bass House",
-        "Radio Record «Jungle»|https://radiorecord.hostingradio.ru/jungle96.aacp|Jungle",
-        "Radio Record «Lady Waks»|https://radiorecord.hostingradio.ru/ladywaks64.aacp|Миксы (Lady Waks)",
-        "Radio Record «Latina Dance»|https://radiorecord.hostingradio.ru/latina96.aacp|Латина",
-        "Radio Record «Liquid Funk»|https://radiorecord.hostingradio.ru/liquidfunk96.aacp|Liquid Funk",
-        "Radio Record «Live DJ-sets»|https://radiorecord.hostingradio.ru/livedjsets96.aacp|Живые сеты",
-        "Radio Record «Lo-Fi»|https://radiorecord.hostingradio.ru/lofi96.aacp|Lo-Fi",
-        "Radio Record «Lo-Fi House»|https://radiorecord.hostingradio.ru/lofihouse64.aacp|Lo-Fi House",
-        "Radio Record «Martin Garrix»|https://radiorecord.hostingradio.ru/martingarrix64.aacp|Martin Garrix",
-        "Radio Record «Медляк FM»|https://radiorecord.hostingradio.ru/mdl96.aacp|Медляки",
-        "Radio Record «Маятник Фуко»|https://radiorecord.hostingradio.ru/mf96.aacp|Интеллектуальная",
-        "Radio Record «Minimal/Tech»|https://radiorecord.hostingradio.ru/mini96.aacp|Minimal/Tech",
-        "Radio Record «Megamix»|https://radiorecord.hostingradio.ru/mix96.aacp|Megamix",
-        "Radio Record «Moombahton»|https://radiorecord.hostingradio.ru/mmbt96.aacp|Moombahton",
-        "Radio Record «Midtempo»|https://radiorecord.hostingradio.ru/mt96.aacp|Midtempo",
-        "Radio Record «Нафталин FM»|https://radiorecord.hostingradio.ru/naft96.aacp|Ретро (Нафталин)",
-        "Radio Record «На шашлыки!»|https://radiorecord.hostingradio.ru/nashashlyki96.aacp|Дачная/Поп",
-        "Radio Record «Nejtrino & Baur»|https://radiorecord.hostingradio.ru/nejtrinobaur64.aacp|Миксы (Nejtrino&Baur)",
-        "Radio Record «Neurofunk»|https://radiorecord.hostingradio.ru/neurofunk96.aacp|Neurofunk",
-        "Radio Record «Nu Dance»|https://radiorecord.hostingradio.ru/nudance64.aacp|Nu Dance",
-        "Radio Record «Oliver Heldens»|https://radiorecord.hostingradio.ru/oliverheldens64.aacp|Oliver Heldens",
-        "Radio Record «Organic»|https://radiorecord.hostingradio.ru/organic96.aacp|Organic House",
-        "Radio Record «Party 24/7»|https://radiorecord.hostingradio.ru/party96.aacp|Party",
-        "Radio Record «Phonk»|https://radiorecord.hostingradio.ru/phonk96.aacp|Phonk",
-        "Radio Record «Progressive»|https://radiorecord.hostingradio.ru/progr96.aacp|Прогрессив",
-        "Radio Record «Pirate Station»|https://radiorecord.hostingradio.ru/ps96.aacp|Pirate Station",
-        "Radio Record «Колбасный Цех»|https://radiorecord.hostingradio.ru/pump96.aacp|Клубный бас",
-        "Radio Record «Rap Hits»|https://radiorecord.hostingradio.ru/rap96.aacp|Рэп Хиты",
-        "Radio Record «Rap Classics»|https://radiorecord.hostingradio.ru/rapclassics96.aacp|Рэп Классика",
-        "Radio Record «Rave FM»|https://radiorecord.hostingradio.ru/rave96.aacp|Рейв",
-        "Radio Record «Reggae»|https://radiorecord.hostingradio.ru/reggae96.aacp|Регги",
-        "Radio Record «Remix»|https://radiorecord.hostingradio.ru/rmx96.aacp|Ремиксы",
-        "Radio Record «Rock»|https://radiorecord.hostingradio.ru/rock96.aacp|Рок",
-        "Radio Record «Record»|https://radiorecord.hostingradio.ru/rr_main96.aacp|Основная (Танцевальная)",
-        "Radio Record «Russian Mix»|https://radiorecord.hostingradio.ru/rus96.aacp|Русский микс",
-        "Radio Record «Russian Gold»|https://radiorecord.hostingradio.ru/russiangold96.aacp|Русский золотой",
-        "Radio Record «Russian Hits»|https://radiorecord.hostingradio.ru/russianhits64.aacp|Русские хиты",
-        "Radio Record «Русская Зима»|https://radiorecord.hostingradio.ru/ruszima96.aacp|Русская зимняя",
-        "Radio Record «Руки Вверх!»|https://radiorecord.hostingradio.ru/rv96.aacp|Руки Вверх!",
-        "Radio Record «Супердискотека 90-х»|https://radiorecord.hostingradio.ru/sd9096.aacp|Супердискотека 90-х",
-        "Radio Record «Summer Lounge»|https://radiorecord.hostingradio.ru/summerlounge64.aacp|Summer Lounge",
-        "Radio Record «Summer Dance от Т-Банк»|https://radiorecord.hostingradio.ru/summerparty96.aacp|Summer Dance",
-        "Radio Record «Симфония FM»|https://radiorecord.hostingradio.ru/symph96.aacp|Симфоническая",
-        "Radio Record «Synthwave»|https://radiorecord.hostingradio.ru/synth96.aacp|Synthwave",
-        "Radio Record «Techno»|https://radiorecord.hostingradio.ru/techno96.aacp|Техно",
-        "Radio Record «Technopop»|https://radiorecord.hostingradio.ru/technopop96.aacp|Technopop",
-        "Radio Record «Tech House»|https://radiorecord.hostingradio.ru/techouse96.aacp|Tech House",
-        "Radio Record «Tecktonik»|https://radiorecord.hostingradio.ru/tecktonik96.aacp|Tecktonik",
-        "Radio Record «Hardstyle»|https://radiorecord.hostingradio.ru/teo96.aacp|Hardstyle",
-        "Radio Record «Tiesto»|https://radiorecord.hostingradio.ru/tiesto96.aacp|Tiesto",
-        "Radio Record «Trancemission»|https://radiorecord.hostingradio.ru/tm96.aacp|Trancemission",
-        "Radio Record «TOP 100 EDM»|https://radiorecord.hostingradio.ru/top100edm96.aacp|Топ 100 EDM",
-        "Radio Record «Trance Classics»|https://radiorecord.hostingradio.ru/trancehits96.aacp|Trance Классика",
-        "Radio Record «Trancehouse»|https://radiorecord.hostingradio.ru/trancehouse96.aacp|Trancehouse",
-        "Radio Record «Trap»|https://radiorecord.hostingradio.ru/trap96.aacp|Trap",
-        "Radio Record «Tropical»|https://radiorecord.hostingradio.ru/trop96.aacp|Tropical",
-        "Radio Record «DJ Цветкоff»|https://radiorecord.hostingradio.ru/tsvetkov64.aacp|Миксы (Цветкоff)",
-        "Radio Record «UK Garage»|https://radiorecord.hostingradio.ru/ukgarage96.aacp|UK Garage",
-        "Radio Record «Ultra Music Festival»|https://radiorecord.hostingradio.ru/ultra64.aacp|Ultra Music Fest",
-        "Radio Record «Uplifting»|https://radiorecord.hostingradio.ru/uplift96.aacp|Uplifting",
-        "Radio Record «VIP House»|https://radiorecord.hostingradio.ru/vip96.aacp|VIP House",
-        "Radio Record «Workout»|https://radiorecord.hostingradio.ru/workout96.aacp|Workout",
-        "Radio Record «Black Rap»|https://radiorecord.hostingradio.ru/yo96.aacp|Black Rap",
-        "Русское Радио (другое)|https://rusradio.hostingradio.ru/rusradio128.mp3|Русская поп"
-    ];
-    
-    // Разворачиваем компактный формат в массив объектов
-    let stationsData = stationsCompact.map(item => {
-        const [name, url, style] = item.split('|');
-        return { name, url, style };
+// ========== ГЕНЕРАЦИЯ MANIFEST.JSON (статический) ==========
+function generateIconDataURL(size) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const x = c.getContext('2d');
+    x.fillStyle = "#03050a";
+    x.fillRect(0, 0, size, size);
+    x.font = `${size * 0.55}px 'Segoe UI', 'Montserrat', 'Times New Roman', serif`;
+    x.textAlign = "center";
+    x.textBaseline = "middle";
+    x.fillStyle = "#FFFFFF";
+    x.shadowBlur = size * 0.06;
+    x.shadowColor = "rgba(255,255,200,0.8)";
+    x.fillText("∞", size/2, size/2);
+    x.shadowBlur = 0;
+    return c.toDataURL('image/png');
+}
+
+// Создаём иконки для манифеста
+const iconSizes = [72, 96, 128, 144, 152, 192, 256, 384, 512];
+const manifestIcons = iconSizes.map(size => ({
+    src: generateIconDataURL(size),
+    sizes: `${size}x${size}`,
+    type: "image/png"
+}));
+
+// Манифест
+const manifestData = {
+    name: "ВЕЧНОСТЬ",
+    short_name: "Вечность",
+    description: "Звёздная сингулярность с музыкой",
+    start_url: "/",
+    scope: "/",
+    display: "standalone",
+    theme_color: "#03050a",
+    background_color: "#03050a",
+    icons: manifestIcons
+};
+
+// Сохраняем манифест в localStorage и создаём ссылку на него
+localStorage.setItem('pwa-manifest', JSON.stringify(manifestData));
+
+// Регистрация Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+        console.log('SW registered:', reg);
+    }).catch(err => {
+        console.log('SW registration failed:', err);
     });
-    
-    let allStyles = [...new Set(stationsData.map(s => s.style))].sort();
-    
-    // ========== ИМПОРТ ИЗ EXCEL ==========
-    const importExcelBtn = document.getElementById('importExcelBtn');
-    const excelFileInput = document.getElementById('excelFileInput');
-    const importStatus = document.getElementById('importStatus');
-    
-    function importFromExcel(file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-            
-            if (!rows || rows.length < 2) {
-                importStatus.textContent = 'Ошибка: файл пуст или неверный формат';
-                setTimeout(() => { importStatus.textContent = ''; }, 3000);
-                return;
-            }
-            
-            const headers = rows[0];
-            let nameCol = -1, urlCol = -1, styleCol = -1;
-            for (let i = 0; i < headers.length; i++) {
-                const h = String(headers[i]).toLowerCase();
-                if (h.includes('station') || h.includes('name') || h === 'a') nameCol = i;
-                if (h.includes('stream') || h.includes('link') || h === 'b') urlCol = i;
-                if (h.includes('style') || h === 'c') styleCol = i;
-            }
-            if (nameCol === -1) nameCol = 0;
-            if (urlCol === -1) urlCol = 1;
-            if (styleCol === -1) styleCol = 2;
-            
-            const newStations = [];
-            for (let i = 1; i < rows.length; i++) {
-                const row = rows[i];
-                if (!row || row.length < 3) continue;
-                const name = row[nameCol] ? String(row[nameCol]).trim() : '';
-                const url = row[urlCol] ? String(row[urlCol]).trim() : '';
-                const style = row[styleCol] ? String(row[styleCol]).trim() : 'Другое';
-                if (name && url && !newStations.some(s => s.name === name)) {
-                    let finalUrl = url;
-                    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
-                        finalUrl = 'http://' + finalUrl;
-                    }
-                    newStations.push({ name, url: finalUrl, style });
+}
+
+// ========== ГЕНЕРАЦИЯ SERVICE WORKER ==========
+const swCode = `const CACHE_NAME = 'vechnost-v2';
+const urlsToCache = ['/', '/index.html'];
+
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    );
+    self.skipWaiting();
+});
+
+self.addEventListener('fetch', event => {
+    event.respondWith(
+        caches.match(event.request).then(response => {
+            if (response) return response;
+            return fetch(event.request).then(response => {
+                if (!response || response.status !== 200 || response.type !== 'basic') return response;
+                const responseToCache = response.clone();
+                caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, responseToCache);
+                });
+                return response;
+            });
+        })
+    );
+});`;
+
+// Создаём blob для service worker
+const swBlob = new Blob([swCode], {type: 'application/javascript'});
+const swUrl = URL.createObjectURL(swBlob);
+navigator.serviceWorker.register(swUrl).catch(e => console.log('SW fallback'));
+
+// ========== FAVICON ==========
+function createFavicon() {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const x = c.getContext('2d');
+    x.clearRect(0, 0, 64, 64);
+    x.font = "bold 48px 'Segoe UI', 'Montserrat', 'Times New Roman', serif";
+    x.textAlign = "center";
+    x.textBaseline = "middle";
+    x.fillStyle = "#FFFFFF";
+    x.shadowBlur = 4;
+    x.shadowColor = "rgba(255,255,200,0.8)";
+    x.fillText("∞", 32, 34);
+    x.shadowBlur = 0;
+    document.getElementById('dynamicFavicon').href = c.toDataURL('image/png');
+}
+createFavicon();
+
+// ========== ПОЛНЫЙ СПИСОК РАДИОСТАНЦИЙ ==========
+const stationsCompact = [
+    "DFM|http://dfm.hostingradio.ru/dfm96.aacp|Поп/Top 40",
+    "Европа Плюс 320|http://europaplus.hostingradio.ru:8014/europaplus320.mp3|Поп/Top 40",
+    "Радио Energy|http://online-2.gkvr.ru:8000/energy_nsb_64.aac|Поп/Top 40",
+    "Maximum|http://23.105.238.4/maximum96.aacp|Рок",
+    "Детское радио|http://23.105.238.4/gpm-detifm495.aacp|Детское",
+    "Русский Хит|http://stream2.ruhit.fm:9000/19_ruhit_128_reg_1|Поп",
+    "Comedy Радио|http://online-2.gkvr.ru:8000/comedy_nsb_64.aac|Камеди",
+    "Радио Ретро Хит|http://air.volna.top/Retro|Ретро/Диско",
+    "Дорожное радио|http://dorognoe.hostingradio.ru:8000/dorognoe|Шансон/Дорожная",
+    "Европа Плюс|http://ep128.hostingradio.ru:8030/ep128|Поп/Top 40",
+    "Европа Плюс (Топ 40)|http://eptop128server.streamr.ru:8033/eptop128|Поп/Top 40",
+    "РетроФМ|http://hls-01-retro.emgsound.ru/12/128/playlist.m3u8|Ретро",
+    "Вести ФМ|http://icecast.vgtrk.cdnvideo.ru/vestifm_mp3_128kbps|Новости/Разговорное",
+    "Радио дача|http://listen.vdfm.ru:8000/dacha|Шансон/Поп",
+    "90's Eurodance|http://listen1.myradio24.com:9000/5967|Евродэнс 90-х",
+    "Jazz FM 89.1|http://nashe1.hostingradio.ru/jazz-128.mp3|Джаз",
+    "Наше радио|http://nashe1.hostingradio.ru/nashe-128.mp3|Русский рок",
+    "Discover Trance|http://paris.discovertrance.com:8006/;stream.nsv|Транс",
+    "Радио Мелодия (СПБ)|http://stream128.melodiafm.spb.ru:8000/melodia128|Классика/Инструментал",
+    "Zaycev Bass|https://abs.zaycev.fm/bass128k|Bass-музыка",
+    "Zaycev Bass 256|https://abs.zaycev.fm/bass256к|Bass-музыка",
+    "Zaycev Classic|https://abs.zaycev.fm/classic128k|Классическая",
+    "Zaycev Classic 256|https://abs.zaycev.fm/classic256к|Классическая",
+    "Zaycev Club|https://abs.zaycev.fm/club128k|Клубная",
+    "Zaycev Club 256|https://abs.zaycev.fm/club256к|Клубная",
+    "Zaycev Disco|https://abs.zaycev.fm/disco128k|Диско",
+    "Zaycev Disco 256|https://abs.zaycev.fm/disco256к|Диско",
+    "Zaycev Folk|https://abs.zaycev.fm/folk128k|Фолк/Народная",
+    "Zaycev Folk 256|https://abs.zaycev.fm/folk256к|Фолк/Народная",
+    "Zaycev K-Pop|https://abs.zaycev.fm/kpop128k|K-Pop",
+    "Zaycev K-Pop 256|https://abs.zaycev.fm/kpop256к|K-Pop",
+    "Zaycev Love|https://abs.zaycev.fm/love128k|Лирика/Лав",
+    "Zaycev Love 256|https://abs.zaycev.fm/love256к|Лирика/Лав",
+    "Zaycev Metal|https://abs.zaycev.fm/metal128k|Метал",
+    "Zaycev Metal 256|https://abs.zaycev.fm/metal256к|Метал",
+    "Zaycev Pop|https://abs.zaycev.fm/pop128k|Поп",
+    "Zaycev Pop 256|https://abs.zaycev.fm/pop256к|Поп",
+    "Zaycev Rap|https://abs.zaycev.fm/rap128k|Рэп/Хип-хоп",
+    "Zaycev Rap 256|https://abs.zaycev.fm/rap256к|Рэп/Хип-хоп",
+    "Zaycev Relax|https://abs.zaycev.fm/relax128k|Релакс/Чилл",
+    "Zaycev Relax 256|https://abs.zaycev.fm/relax256к|Релакс/Чилл",
+    "Zaycev RnB|https://abs.zaycev.fm/rnb128k|R&B",
+    "Zaycev RnB 256|https://abs.zaycev.fm/rnb256к|R&B",
+    "Zaycev NewRock|https://abs.zaycev.fm/rock128k|Рок",
+    "Zaycev NewRock 256|https://abs.zaycev.fm/rock256к|Рок",
+    "Zaycev РуРок|https://abs.zaycev.fm/rurock128k|Русский рок",
+    "Zaycev РуРок 256|https://abs.zaycev.fm/rurock256к|Русский рок",
+    "Zaycev Rus|https://abs.zaycev.fm/rus128k|Русская поп",
+    "Zaycev Rus 256|https://abs.zaycev.fm/rus256к|Русская поп",
+    "Zaycev Шансон|https://abs.zaycev.fm/shanson128k|Шансон",
+    "Zaycev Шансон 256|https://abs.zaycev.fm/shanson256к|Шансон",
+    "Zaycev Зайчата|https://abs.zaycev.fm/zaychata128k|Детские песни",
+    "Zaycev Зайчата 256|https://abs.zaycev.fm/zaychata256к|Детские песни",
+    "Радио Маяк|https://icecast-vgtrk.cdnvideo.ru/mayakfm_aac_64kbps|Новости/Разговорное",
+    "Радио максимум|https://maximum.hostingradio.ru/maximum128.mp3|Рок/Альтернатива",
+    "Русское Радио|https://rusradio.hostingradio.ru/rusradio128.mp3|Русская поп",
+    "Radio Record «70's Dance»|https://radiorecord.hostingradio.ru/197096.aacp|Танцы 70-х",
+    "Radio Record «Record 80-х»|https://radiorecord.hostingradio.ru/198096.aacp|80-е",
+    "Radio Record «Рекорд 00-х»|https://radiorecord.hostingradio.ru/200096.aacp|00-е",
+    "Radio Record «10's Dance»|https://radiorecord.hostingradio.ru/201096.aacp|Танцы 10-х",
+    "Radio Record «Ambient»|https://radiorecord.hostingradio.ru/ambient96.aacp|Ambient",
+    "Radio Record «Chill-Out»|https://radiorecord.hostingradio.ru/chil96.aacp|Чилл-аут",
+    "Radio Record «Deep»|https://radiorecord.hostingradio.ru/deep96.aacp|Deep House",
+    "Radio Record «Lo-Fi»|https://radiorecord.hostingradio.ru/lofi96.aacp|Lo-Fi",
+    "Radio Record «Rock»|https://radiorecord.hostingradio.ru/rock96.aacp|Рок",
+    "Radio Record «Techno»|https://radiorecord.hostingradio.ru/techno96.aacp|Техно",
+    "Radio Record «Trance Classics»|https://radiorecord.hostingradio.ru/trancehits96.aacp|Trance Классика",
+    "Radio Record «Synthwave»|https://radiorecord.hostingradio.ru/synth96.aacp|Synthwave",
+    "Radio Record «Eurodance»|https://radiorecord.hostingradio.ru/eurodance96.aacp|Евродэнс",
+    "Radio Record «Record»|https://radiorecord.hostingradio.ru/rr_main96.aacp|Основная (Танцевальная)"
+];
+
+let stationsData = stationsCompact.map(item => {
+    const [name, url, style] = item.split('|');
+    return { name, url, style };
+});
+
+let allStyles = [...new Set(stationsData.map(s => s.style))].sort();
+
+// ========== ИМПОРТ ИЗ EXCEL ==========
+const importExcelBtn = document.getElementById('importExcelBtn');
+const excelFileInput = document.getElementById('excelFileInput');
+const importStatus = document.getElementById('importStatus');
+
+function importFromExcel(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+        if (!rows || rows.length < 2) {
+            importStatus.textContent = 'Ошибка: файл пуст или неверный формат';
+            setTimeout(() => { importStatus.textContent = ''; }, 3000);
+            return;
+        }
+        const headers = rows[0];
+        let nameCol = -1, urlCol = -1, styleCol = -1;
+        for (let i = 0; i < headers.length; i++) {
+            const h = String(headers[i]).toLowerCase();
+            if (h.includes('station') || h.includes('name') || h === 'a') nameCol = i;
+            if (h.includes('stream') || h.includes('link') || h === 'b') urlCol = i;
+            if (h.includes('style') || h === 'c') styleCol = i;
+        }
+        if (nameCol === -1) nameCol = 0;
+        if (urlCol === -1) urlCol = 1;
+        if (styleCol === -1) styleCol = 2;
+        
+        const newStations = [];
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row || row.length < 3) continue;
+            const name = row[nameCol] ? String(row[nameCol]).trim() : '';
+            const url = row[urlCol] ? String(row[urlCol]).trim() : '';
+            const style = row[styleCol] ? String(row[styleCol]).trim() : 'Другое';
+            if (name && url && !newStations.some(s => s.name === name)) {
+                let finalUrl = url;
+                if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+                    finalUrl = 'http://' + finalUrl;
                 }
-            }
-            
-            if (newStations.length === 0) {
-                importStatus.textContent = 'Не найдено станций в файле';
-                setTimeout(() => { importStatus.textContent = ''; }, 3000);
-                return;
-            }
-            
-            stationsData = newStations;
-            allStyles = [...new Set(stationsData.map(s => s.style))].sort();
-            updateStyleFilter();
-            renderList();
-            importStatus.textContent = `✅ Импортировано ${newStations.length} станций!`;
-            setTimeout(() => { importStatus.textContent = ''; }, 4000);
-        };
-        reader.readAsArrayBuffer(file);
-    }
-    
-    importExcelBtn.addEventListener('click', () => { excelFileInput.click(); });
-    excelFileInput.addEventListener('change', (e) => {
-        if (e.target.files.length) {
-            importFromExcel(e.target.files[0]);
-            e.target.value = '';
-        }
-    });
-    
-    // ========== АНИМАЦИЯ ==========
-    const canvas = document.getElementById('starCanvas');
-    const ctx = canvas.getContext('2d');
-    let W, H, Cx, Cy;
-    let particles = [];
-    let isHover = false, isLeft = false, isRight = false;
-    let mouseX = null, mouseY = null;
-    let touchMode = null, touchX = null, touchY = null;
-    let animFrame, lastTime = 0, globalTime = 0, forceMult = 0;
-    const FORCE_MAX = 5.5, FORCE_ACC = 3.0, FORCE_DEC = 2.5;
-    let glow = 0, volume = 0;
-    let flying = [], lastEmit = 0;
-    let isCollecting = false, collectProgress = 0, collectStart = [];
-    
-    let audio = new Audio();
-    let audioCtx = null, analyser = null, isAudioConnected = false;
-    const DEFAULT_STREAM = 'https://ice1.somafm.com/deepspaceone-128-mp3';
-    audio.src = DEFAULT_STREAM;
-    audio.crossOrigin = "anonymous";
-    
-    const copyrightEl = document.getElementById('copyrightText');
-    let copyrightTimer = null;
-    function onMusicPlay() { if (copyrightTimer) clearTimeout(copyrightTimer); copyrightTimer = setTimeout(() => copyrightEl.classList.add('hidden'), 500); }
-    function onMusicStop() { if (copyrightTimer) clearTimeout(copyrightTimer); copyrightTimer = setTimeout(() => copyrightEl.classList.remove('hidden'), 1000); }
-    audio.addEventListener('play', onMusicPlay);
-    audio.addEventListener('pause', onMusicStop);
-    audio.addEventListener('ended', onMusicStop);
-    
-    function initAnalyser() {
-        if (!audio.src) return;
-        if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
-        try {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 256;
-            audioCtx.createMediaElementSource(audio).connect(analyser);
-            analyser.connect(audioCtx.destination);
-            isAudioConnected = true;
-            audioCtx.resume();
-            let data = new Uint8Array(analyser.frequencyBinCount);
-            function updateVol() {
-                if (!analyser) return;
-                analyser.getByteFrequencyData(data);
-                let sum = 0; for (let i=0;i<data.length;i++) sum+=data[i];
-                volume = ((sum/data.length)/255)*0.85 + volume*0.15;
-                requestAnimationFrame(updateVol);
-            }
-            updateVol();
-        } catch(e) {}
-    }
-    function playMusic() { audio.play().then(()=>{ if(!isAudioConnected) initAnalyser(); document.getElementById('autoplayHint').style.opacity='0'; onMusicPlay(); }).catch(()=>{ document.getElementById('autoplayHint').style.opacity='1'; }); }
-    function stopMusic() { audio.pause(); audio.currentTime=0; onMusicStop(); }
-    function setSource(url, name) { stopMusic(); audio.src=url; audio.load(); if(!isAudioConnected) initAnalyser(); playMusic(); }
-    
-    let folderPlaylist = [], folderIndex = 0, isFolderMode = false;
-    function playNext() { if(!isFolderMode || !folderPlaylist.length) return; folderIndex = (folderIndex+1)%folderPlaylist.length; audio.src = folderPlaylist[folderIndex].file; audio.load(); audio.play().catch(e=>{}); if(!isAudioConnected) initAnalyser(); }
-    audio.addEventListener('ended', () => { if(isFolderMode) playNext(); });
-    function setFolder(files) {
-        let list = [];
-        for(let f of files) if(f.type.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|flac)$/i.test(f.name)) list.push({file: URL.createObjectURL(f), name: f.name});
-        if(!list.length) return;
-        if(isFolderMode) folderPlaylist.forEach(i=>URL.revokeObjectURL(i.file));
-        folderPlaylist = list;
-        folderIndex = 0;
-        isFolderMode = true;
-        stopMusic();
-        audio.src = folderPlaylist[0].file;
-        audio.load();
-        if(!isAudioConnected) initAnalyser();
-        audio.play().catch(e=>{});
-    }
-    
-    function generateWordParticles() {
-        let off = document.createElement('canvas'); off.width=W; off.height=H;
-        let offCtx = off.getContext('2d');
-        offCtx.fillStyle="#000"; offCtx.fillRect(0,0,W,H);
-        let fs = Math.min(W*0.15,130); fs = Math.max(fs,56);
-        offCtx.font = `bold ${fs}px 'Segoe UI', 'Montserrat', system-ui`;
-        offCtx.textAlign="center"; offCtx.textBaseline="middle";
-        offCtx.fillStyle="#fff";
-        offCtx.fillText("ВЕЧНОСТЬ", W/2, H/2);
-        offCtx.fillText("ВЕЧНОСТЬ", W/2, H/2);
-        let img = offCtx.getImageData(0,0,W,H), data=img.data, pos=[];
-        for(let y=0; y<H; y++) for(let x=0; x<W; x++) {
-            if(data[(y*W+x)*4] > 200) pos.push({x,y});
-        }
-        if(pos.length>3500) { let step=pos.length/3500, lim=[]; for(let i=0;i<3500;i++) lim.push(pos[Math.floor(i*step)]); pos=lim; }
-        let parts = [];
-        for(let p of pos) {
-            let color = ["#FFFFFF","#F8F9FA","#F0F2F5","#EAECEF","#E2E6EB"][Math.floor(Math.random()*5)];
-            let radBase = 1.2+Math.random()*1.6;
-            parts.push({ origX:p.x, origY:p.y, curX:p.x, curY:p.y, tarX:p.x, tarY:p.y, color, baseRad:radBase, rad:radBase, orbRad:0, orbAng:0, orbSpeed:0 });
-        }
-        return parts;
-    }
-    
-    function updateOrbit(p) { let dx=p.tarX-Cx, dy=p.tarY-Cy; p.orbRad=Math.hypot(dx,dy); p.orbAng=Math.atan2(dy,dx); p.orbSpeed=0.14+(Math.random()-0.5)*0.1; if(p.orbSpeed<0.04) p.orbSpeed=0.07; }
-    function computeExplode() { for(let p of particles) { let ang=Math.random()*Math.PI*2, rad=140+Math.random()*180; let ox=Math.cos(ang)*rad, oy=Math.sin(ang)*rad; if(Math.random()>0.7){ox*=1.2;oy*=1.2;} let tx=p.origX+ox, ty=p.origY+oy; tx=Math.min(W+180,Math.max(-180,tx)); ty=Math.min(H+140,Math.max(-140,ty)); p.tarX=tx; p.tarY=ty; updateOrbit(p); } }
-    function getOrbit(p,t) { let ang=p.orbAng + p.orbSpeed*t; return { x:Cx+Math.cos(ang)*p.orbRad, y:Cy+Math.sin(ang)*p.orbRad }; }
-    
-    function startCollect() { if(isCollecting) return; isCollecting = true; collectProgress = 0; collectStart = particles.map(p => ({ x: p.curX, y: p.curY })); isHover = false; isLeft = isRight = false; touchMode = null; }
-    function updateCollect(dt) { if(!isCollecting) return; collectProgress += dt*1.2; if(collectProgress>=1) { collectProgress=1; isCollecting=false; for(let p of particles) { p.curX=p.origX; p.curY=p.origY; } return; } let ease=1-Math.pow(1-collectProgress,2); for(let i=0;i<particles.length;i++) { let p=particles[i], s=collectStart[i]; p.curX = s.x + (p.origX - s.x)*ease; p.curY = s.y + (p.origY - s.y)*ease; } }
-    
-    function applyForce(p, x, y, attract) {
-        if(x===null) return {dx:0,dy:0};
-        let dx=p.curX-x, dy=p.curY-y, dist=Math.hypot(dx,dy);
-        if(dist<0.5) return {dx:0,dy:0};
-        let base=2.2/(1+dist*0.018); if(base>0.85) base=0.85;
-        let force=base*forceMult;
-        let dirX, dirY;
-        if(attract) { dirX=-dx; dirY=-dy; } else { dirX=dx; dirY=dy; }
-        let len=Math.hypot(dirX,dirY); if(len>0.001) { dirX/=len; dirY/=len; }
-        let stepX=dirX*force*(attract?2.2:2.8), stepY=dirY*force*(attract?2.2:2.8);
-        let mag=Math.hypot(stepX,stepY), maxStep=attract?28:30;
-        if(mag>maxStep) { stepX=stepX/mag*maxStep; stepY=stepY/mag*maxStep; }
-        return {dx:stepX, dy:stepY};
-    }
-    
-    function emitStars(now) {
-        if(isCollecting) return;
-        if(now - lastEmit < 3800) return;
-        lastEmit = now;
-        if(!particles.length) return;
-        let count = 3 + Math.floor(Math.random() * 3);
-        let indices = [];
-        while(indices.length < count && indices.length < particles.length) {
-            let i = Math.floor(Math.random() * particles.length);
-            if(!indices.includes(i)) indices.push(i);
-        }
-        for(let i of indices) {
-            let p = particles[i];
-            let ang = Math.random() * Math.PI * 2;
-            let dist = 45 + Math.random() * 55;
-            let tx = p.curX + Math.cos(ang) * dist;
-            let ty = p.curY + Math.sin(ang) * dist;
-            flying.push({ startX: p.curX, startY: p.curY, targetX: tx, targetY: ty, progress: 0, speed: 0.008 + Math.random() * 0.006, isReturning: false, rad: p.rad * 1.2, color: p.color, origIdx: i });
-        }
-    }
-    
-    function updateFlying() {
-        for(let i=0;i<flying.length;i++) {
-            let f = flying[i];
-            if(!f.isReturning) {
-                f.progress += f.speed;
-                if(f.progress >= 1) { f.isReturning = true; f.progress = 0; f.startX = f.curX; f.startY = f.curY; }
-                else { let t = f.progress; f.curX = f.startX + (f.targetX - f.startX)*t; f.curY = f.startY + (f.targetY - f.startY)*t; }
-            } else {
-                f.progress += f.speed * 0.7;
-                if(f.progress >= 1) { let p = particles[f.origIdx]; if(p) { f.curX = p.curX; f.curY = p.curY; } flying.splice(i,1); i--; continue; }
-                else { let p = particles[f.origIdx]; if(p) { let tx = p.curX, ty = p.curY, t = f.progress; f.curX = f.startX + (tx - f.startX)*t; f.curY = f.startY + (ty - f.startY)*t; } else { flying.splice(i,1); i--; } }
+                newStations.push({ name, url: finalUrl, style });
             }
         }
-    }
-    
-    function updatePositions(dt, nowSec) {
-        if(isCollecting) { updateCollect(dt); return; }
-        let bass = volume * 1.0;
-        let vibX = (Math.random()-0.5)*bass*1.2, vibY = (Math.random()-0.5)*bass*1.2;
-        glow = bass * 0.9;
-        for(let p of particles) { let scale = 1 + bass*0.6; p.rad = p.baseRad * scale; if(p.rad > 3.5) p.rad = 3.5; }
-        
-        let attract = false, repel = false, cx = null, cy = null;
-        if(touchMode && touchX!==null) { if(touchMode==='left') attract=true; else repel=true; cx=touchX; cy=touchY; }
-        else if(isLeft) { attract=true; cx=mouseX; cy=mouseY; }
-        else if(isRight) { repel=true; cx=mouseX; cy=mouseY; }
-        
-        if((attract||repel) && cx!==null && isHover) {
-            for(let p of particles) { let f = applyForce(p, cx, cy, attract); let nx = p.curX + f.dx + vibX*0.6, ny = p.curY + f.dy + vibY*0.6; p.curX += (nx-p.curX)*0.85; p.curY += (ny-p.curY)*0.85; }
-        } else if(isHover) {
-            for(let p of particles) {
-                let orb = getOrbit(p, globalTime);
-                let dx = orb.x-Cx, dy = orb.y-Cy, distC = Math.hypot(dx,dy);
-                if(distC>0.01) { let nx=dx/distC, ny=dy/distC, shift=bass*16; orb.x += nx*shift; orb.y += ny*shift; }
-                orb.x += vibX*0.7; orb.y += vibY*0.7;
-                let dxp = orb.x - p.curX, dyp = orb.y - p.curY;
-                if(Math.abs(dxp)>0.3||Math.abs(dyp)>0.3) { p.curX += dxp*0.12; p.curY += dyp*0.12; } else { p.curX=orb.x; p.curY=orb.y; }
-            }
-        } else {
-            for(let p of particles) {
-                let tx = p.origX + vibX*0.8, ty = p.origY + vibY*0.8;
-                let dx = tx-p.curX, dy = ty-p.curY;
-                if(Math.abs(dx)>0.3||Math.abs(dy)>0.3) { p.curX += dx*0.12; p.curY += dy*0.12; } else { p.curX=tx; p.curY=ty; }
-            }
+        if (newStations.length === 0) {
+            importStatus.textContent = 'Не найдено станций в файле';
+            setTimeout(() => { importStatus.textContent = ''; }, 3000);
+            return;
         }
-    }
-    
-    function draw() {
-        ctx.fillStyle="#03050a"; ctx.fillRect(0,0,W,H);
-        for(let p of particles) { ctx.beginPath(); ctx.arc(p.curX,p.curY,p.rad,0,Math.PI*2); ctx.fillStyle=p.color; ctx.fill(); }
-        for(let f of flying) { ctx.beginPath(); ctx.arc(f.curX,f.curY,f.rad*1.1,0,Math.PI*2); ctx.fillStyle=f.color; ctx.fill(); ctx.beginPath(); ctx.arc(f.curX,f.curY,f.rad*0.7,0,Math.PI*2); ctx.fillStyle="#FFEECC"; ctx.fill(); }
-        ctx.globalCompositeOperation="lighter";
-        let r=255, g=200+Math.floor(glow*55), b=200+Math.floor(glow*55);
-        if(glow>0.3) { g=160+Math.floor(glow*70); b=210+Math.floor(glow*45); }
-        let glowColor = `rgba(${r},${g},${b},0.38)`;
-        for(let p of particles) { ctx.beginPath(); ctx.arc(p.curX,p.curY,p.rad*1.8,0,Math.PI*2); ctx.fillStyle=glowColor; ctx.fill(); }
-        ctx.globalCompositeOperation="source-over";
-    }
-    
-    function animation(nowMs) {
-        if(!lastTime) { lastTime=nowMs; requestAnimationFrame(animation); return; }
-        let dt=Math.min(0.033,(nowMs-lastTime)/1000);
-        if(dt<=0) { lastTime=nowMs; requestAnimationFrame(animation); return; }
-        let any = isLeft || isRight || touchMode;
-        if(any && isHover && (mouseX!==null||touchX!==null) && !isCollecting) { forceMult = Math.min(FORCE_MAX, forceMult + FORCE_ACC*dt); }
-        else { forceMult = Math.max(0, forceMult - FORCE_DEC*dt); }
-        if(!any && isHover && !isCollecting) globalTime += dt;
-        lastTime=nowMs;
-        updatePositions(dt, nowMs/1000);
-        updateFlying();
-        emitStars(nowMs);
-        draw();
-        animFrame = requestAnimationFrame(animation);
-    }
-    
-    // ========== СОБЫТИЯ МЫШИ ==========
-    function onMouseEnter(e) { isHover = true; computeExplode(); updateMouse(e); }
-    function onMouseLeave() { isHover = false; isLeft = isRight = false; mouseX = mouseY = null; forceMult = 0; }
-    function onMouseMove(e) { if(isHover) updateMouse(e); }
-    function updateMouse(e) { let rect=canvas.getBoundingClientRect(); let sx=canvas.width/rect.width, sy=canvas.height/rect.height; mouseX=Math.min(W,Math.max(0,(e.clientX-rect.left)*sx)); mouseY=Math.min(H,Math.max(0,(e.clientY-rect.top)*sy)); }
-    function onMouseDown(e) { e.preventDefault(); if(e.button===0) { isLeft=true; isRight=false; } else if(e.button===2) { isRight=true; isLeft=false; } updateMouse(e); }
-    function onMouseUp(e) { if(e.button===0) isLeft=false; else if(e.button===2) isRight=false; }
-    canvas.addEventListener('contextmenu',e=>e.preventDefault());
-    canvas.addEventListener('mouseenter',onMouseEnter); canvas.addEventListener('mouseleave',onMouseLeave);
-    canvas.addEventListener('mousemove',onMouseMove); canvas.addEventListener('mousedown',onMouseDown);
-    window.addEventListener('mouseup',onMouseUp);
-    
-    // ========== МОБИЛЬНЫЕ ЖЕСТЫ ==========
-    let lastTap = 0;
-    function onTouchStart(e) {
-        e.preventDefault();
-        const t = e.touches, now = Date.now();
-        if(t.length===1) {
-            if(now - lastTap < 300) { startCollect(); lastTap=0; return; }
-            lastTap=now;
-            if(!isHover) { isHover=true; computeExplode(); }
-            touchMode = 'left';
-            updateTouch(t[0]);
-        } else if(t.length===2) {
-            lastTap=0;
-            if(!isHover) { isHover=true; computeExplode(); }
-            touchMode = 'right';
-            updateTouchCoords((t[0].clientX+t[1].clientX)/2, (t[0].clientY+t[1].clientY)/2);
-        }
-    }
-    function onTouchMove(e) { e.preventDefault(); if(isCollecting) return; const t=e.touches; if(t.length===1 && touchMode==='left') updateTouch(t[0]); else if(t.length===2 && touchMode==='right') updateTouchCoords((t[0].clientX+t[1].clientX)/2, (t[0].clientY+t[1].clientY)/2); }
-    function onTouchEnd(e) { touchMode=null; touchX=touchY=null; }
-    function updateTouch(t) { let rect=canvas.getBoundingClientRect(); let sx=canvas.width/rect.width, sy=canvas.height/rect.height; touchX=Math.min(W,Math.max(0,(t.clientX-rect.left)*sx)); touchY=Math.min(H,Math.max(0,(t.clientY-rect.top)*sy)); mouseX=touchX; mouseY=touchY; }
-    function updateTouchCoords(x,y) { let rect=canvas.getBoundingClientRect(); let sx=canvas.width/rect.width, sy=canvas.height/rect.height; touchX=Math.min(W,Math.max(0,(x-rect.left)*sx)); touchY=Math.min(H,Math.max(0,(y-rect.top)*sy)); mouseX=touchX; mouseY=touchY; }
-    canvas.addEventListener('touchstart',onTouchStart,{passive:false}); canvas.addEventListener('touchmove',onTouchMove,{passive:false}); canvas.addEventListener('touchend',onTouchEnd); canvas.addEventListener('touchcancel',onTouchEnd);
-    
-    function resize() { W=window.innerWidth; H=window.innerHeight; canvas.width=W; canvas.height=H; Cx=W/2; Cy=H/2; particles=generateWordParticles(); computeExplode(); for(let p of particles) updateOrbit(p); if(isHover) computeExplode(); isCollecting=false; isLeft=isRight=false; touchMode=null; forceMult=0; globalTime=0; lastTime=0; }
-    window.addEventListener('resize',resize);
-    
-    // ========== UI ==========
-    const playBtn=document.getElementById('playBtn'), stopBtn=document.getElementById('stopBtn'), srcBtn=document.getElementById('sourceBtn');
-    const modal=document.getElementById('sourceModal'), closeModalBtn=document.getElementById('closeModalBtn'), applyTopBtn=document.getElementById('applyTopBtn');
-    const stationSearch=document.getElementById('stationSearch'), styleFilter=document.getElementById('styleFilter'), radioListDiv=document.getElementById('radioList');
-    const folderInput=document.getElementById('folderInput'), customUrl=document.getElementById('customUrlInput');
-    
-    function renderList() {
-        let search = stationSearch.value.toLowerCase();
-        let style = styleFilter.value;
-        let filt = stationsData.filter(s => (style === 'all' || s.style === style) && 
-            (s.name.toLowerCase().includes(search) || s.style.toLowerCase().includes(search)));
-        radioListDiv.innerHTML = '';
-        for (let s of filt) {
-            let div = document.createElement('div');
-            div.className = 'radio-item';
-            div.innerHTML = `<span class="radio-name">${s.name}</span><span class="radio-style">${s.style}</span>`;
-            div.onclick = () => { setSource(s.url, s.name); closeModalF(); };
-            radioListDiv.appendChild(div);
-        }
-    }
-    
-    function updateStyleFilter() {
+        stationsData = newStations;
         allStyles = [...new Set(stationsData.map(s => s.style))].sort();
-        styleFilter.innerHTML = '<option value="all">все стили</option>';
-        allStyles.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s;
-            opt.textContent = s;
-            styleFilter.appendChild(opt);
-        });
+        updateStyleFilter();
+        renderList();
+        importStatus.textContent = `✅ Импортировано ${newStations.length} станций!`;
+        setTimeout(() => { importStatus.textContent = ''; }, 4000);
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+importExcelBtn.addEventListener('click', () => { excelFileInput.click(); });
+excelFileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) {
+        importFromExcel(e.target.files[0]);
+        e.target.value = '';
     }
-    updateStyleFilter();
-    
-    stationSearch.addEventListener('input', renderList);
-    styleFilter.addEventListener('change', renderList);
-    folderInput.addEventListener('change', (e) => { if (e.target.files.length) setFolder(Array.from(e.target.files)); closeModalF(); });
-    
-    function openModal() { modal.classList.add('active'); renderList(); }
-    function closeModalF() { modal.classList.remove('active'); }
-    function applyCustom() { let url = customUrl.value.trim(); if (url) setSource(url, url); closeModalF(); }
-    
-    srcBtn.addEventListener('click', openModal);
-    closeModalBtn.addEventListener('click', closeModalF);
-    applyTopBtn.addEventListener('click', applyCustom);
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeModalF(); });
-    playBtn.addEventListener('click', playMusic);
-    stopBtn.addEventListener('click', stopMusic);
-    
-    function autoplay() {
-        audio.play().then(() => {
-            if (!isAudioConnected) initAnalyser();
-            document.getElementById('autoplayHint').style.opacity = '0';
-            onMusicPlay();
-        }).catch(() => {
-            document.getElementById('autoplayHint').style.opacity = '1';
-            let start = () => {
-                playMusic();
-                canvas.removeEventListener('click', start);
-                window.removeEventListener('touchstart', start);
-            };
-            canvas.addEventListener('click', start);
-            window.addEventListener('touchstart', start);
-        });
+});
+
+// ========== АНИМАЦИЯ ==========
+const canvas = document.getElementById('starCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, Cx, Cy;
+let particles = [];
+let isHover = false, isLeft = false, isRight = false;
+let mouseX = null, mouseY = null;
+let touchMode = null, touchX = null, touchY = null;
+let animFrame, lastTime = 0, globalTime = 0, forceMult = 0;
+const FORCE_MAX = 5.5, FORCE_ACC = 3.0, FORCE_DEC = 2.5;
+let glow = 0, volume = 0;
+let flying = [], lastEmit = 0;
+let isCollecting = false, collectProgress = 0, collectStart = [];
+
+let audio = new Audio();
+let audioCtx = null, analyser = null, isAudioConnected = false;
+const DEFAULT_STREAM = 'https://ice1.somafm.com/deepspaceone-128-mp3';
+audio.src = DEFAULT_STREAM;
+audio.crossOrigin = "anonymous";
+
+const copyrightEl = document.getElementById('copyrightText');
+let copyrightTimer = null;
+function onMusicPlay() { if (copyrightTimer) clearTimeout(copyrightTimer); copyrightTimer = setTimeout(() => copyrightEl.classList.add('hidden'), 500); }
+function onMusicStop() { if (copyrightTimer) clearTimeout(copyrightTimer); copyrightTimer = setTimeout(() => copyrightEl.classList.remove('hidden'), 1000); }
+audio.addEventListener('play', onMusicPlay);
+audio.addEventListener('pause', onMusicStop);
+audio.addEventListener('ended', onMusicStop);
+
+function initAnalyser() {
+    if (!audio.src) return;
+    if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
+    try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        audioCtx.createMediaElementSource(audio).connect(analyser);
+        analyser.connect(audioCtx.destination);
+        isAudioConnected = true;
+        audioCtx.resume();
+        let data = new Uint8Array(analyser.frequencyBinCount);
+        function updateVol() {
+            if (!analyser) return;
+            analyser.getByteFrequencyData(data);
+            let sum = 0; for (let i=0;i<data.length;i++) sum+=data[i];
+            volume = ((sum/data.length)/255)*0.85 + volume*0.15;
+            requestAnimationFrame(updateVol);
+        }
+        updateVol();
+    } catch(e) {}
+}
+function playMusic() { audio.play().then(()=>{ if(!isAudioConnected) initAnalyser(); document.getElementById('autoplayHint').style.opacity='0'; onMusicPlay(); }).catch(()=>{ document.getElementById('autoplayHint').style.opacity='1'; }); }
+function stopMusic() { audio.pause(); audio.currentTime=0; onMusicStop(); }
+function setSource(url, name) { stopMusic(); audio.src=url; audio.load(); if(!isAudioConnected) initAnalyser(); playMusic(); }
+
+let folderPlaylist = [], folderIndex = 0, isFolderMode = false;
+function playNext() { if(!isFolderMode || !folderPlaylist.length) return; folderIndex = (folderIndex+1)%folderPlaylist.length; audio.src = folderPlaylist[folderIndex].file; audio.load(); audio.play().catch(e=>{}); if(!isAudioConnected) initAnalyser(); }
+audio.addEventListener('ended', () => { if(isFolderMode) playNext(); });
+function setFolder(files) {
+    let list = [];
+    for(let f of files) if(f.type.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|flac)$/i.test(f.name)) list.push({file: URL.createObjectURL(f), name: f.name});
+    if(!list.length) return;
+    if(isFolderMode) folderPlaylist.forEach(i=>URL.revokeObjectURL(i.file));
+    folderPlaylist = list;
+    folderIndex = 0;
+    isFolderMode = true;
+    stopMusic();
+    audio.src = folderPlaylist[0].file;
+    audio.load();
+    if(!isAudioConnected) initAnalyser();
+    audio.play().catch(e=>{});
+}
+
+function generateWordParticles() {
+    let off = document.createElement('canvas'); off.width=W; off.height=H;
+    let offCtx = off.getContext('2d');
+    offCtx.fillStyle="#000"; offCtx.fillRect(0,0,W,H);
+    let fs = Math.min(W*0.15,130); fs = Math.max(fs,56);
+    offCtx.font = `bold ${fs}px 'Segoe UI', 'Montserrat', system-ui`;
+    offCtx.textAlign="center"; offCtx.textBaseline="middle";
+    offCtx.fillStyle="#fff";
+    offCtx.fillText("ВЕЧНОСТЬ", W/2, H/2);
+    offCtx.fillText("ВЕЧНОСТЬ", W/2, H/2);
+    let img = offCtx.getImageData(0,0,W,H), data=img.data, pos=[];
+    for(let y=0; y<H; y++) for(let x=0; x<W; x++) {
+        if(data[(y*W+x)*4] > 200) pos.push({x,y});
     }
+    if(pos.length>3500) { let step=pos.length/3500, lim=[]; for(let i=0;i<3500;i++) lim.push(pos[Math.floor(i*step)]); pos=lim; }
+    let parts = [];
+    for(let p of pos) {
+        let color = ["#FFFFFF","#F8F9FA","#F0F2F5","#EAECEF","#E2E6EB"][Math.floor(Math.random()*5)];
+        let radBase = 1.2+Math.random()*1.6;
+        parts.push({ origX:p.x, origY:p.y, curX:p.x, curY:p.y, tarX:p.x, tarY:p.y, color, baseRad:radBase, rad:radBase, orbRad:0, orbAng:0, orbSpeed:0 });
+    }
+    return parts;
+}
+
+function updateOrbit(p) { let dx=p.tarX-Cx, dy=p.tarY-Cy; p.orbRad=Math.hypot(dx,dy); p.orbAng=Math.atan2(dy,dx); p.orbSpeed=0.14+(Math.random()-0.5)*0.1; if(p.orbSpeed<0.04) p.orbSpeed=0.07; }
+function computeExplode() { for(let p of particles) { let ang=Math.random()*Math.PI*2, rad=140+Math.random()*180; let ox=Math.cos(ang)*rad, oy=Math.sin(ang)*rad; if(Math.random()>0.7){ox*=1.2;oy*=1.2;} let tx=p.origX+ox, ty=p.origY+oy; tx=Math.min(W+180,Math.max(-180,tx)); ty=Math.min(H+140,Math.max(-140,ty)); p.tarX=tx; p.tarY=ty; updateOrbit(p); } }
+function getOrbit(p,t) { let ang=p.orbAng + p.orbSpeed*t; return { x:Cx+Math.cos(ang)*p.orbRad, y:Cy+Math.sin(ang)*p.orbRad }; }
+
+function startCollect() { if(isCollecting) return; isCollecting = true; collectProgress = 0; collectStart = particles.map(p => ({ x: p.curX, y: p.curY })); isHover = false; isLeft = isRight = false; touchMode = null; }
+function updateCollect(dt) { if(!isCollecting) return; collectProgress += dt*1.2; if(collectProgress>=1) { collectProgress=1; isCollecting=false; for(let p of particles) { p.curX=p.origX; p.curY=p.origY; } return; } let ease=1-Math.pow(1-collectProgress,2); for(let i=0;i<particles.length;i++) { let p=particles[i], s=collectStart[i]; p.curX = s.x + (p.origX - s.x)*ease; p.curY = s.y + (p.origY - s.y)*ease; } }
+
+function applyForce(p, x, y, attract) {
+    if(x===null) return {dx:0,dy:0};
+    let dx=p.curX-x, dy=p.curY-y, dist=Math.hypot(dx,dy);
+    if(dist<0.5) return {dx:0,dy:0};
+    let base=2.2/(1+dist*0.018); if(base>0.85) base=0.85;
+    let force=base*forceMult;
+    let dirX, dirY;
+    if(attract) { dirX=-dx; dirY=-dy; } else { dirX=dx; dirY=dy; }
+    let len=Math.hypot(dirX,dirY); if(len>0.001) { dirX/=len; dirY/=len; }
+    let stepX=dirX*force*(attract?2.2:2.8), stepY=dirY*force*(attract?2.2:2.8);
+    let mag=Math.hypot(stepX,stepY), maxStep=attract?28:30;
+    if(mag>maxStep) { stepX=stepX/mag*maxStep; stepY=stepY/mag*maxStep; }
+    return {dx:stepX, dy:stepY};
+}
+
+function emitStars(now) {
+    if(isCollecting) return;
+    if(now - lastEmit < 3800) return;
+    lastEmit = now;
+    if(!particles.length) return;
+    let count = 3 + Math.floor(Math.random() * 3);
+    let indices = [];
+    while(indices.length < count && indices.length < particles.length) {
+        let i = Math.floor(Math.random() * particles.length);
+        if(!indices.includes(i)) indices.push(i);
+    }
+    for(let i of indices) {
+        let p = particles[i];
+        let ang = Math.random() * Math.PI * 2;
+        let dist = 45 + Math.random() * 55;
+        let tx = p.curX + Math.cos(ang) * dist;
+        let ty = p.curY + Math.sin(ang) * dist;
+        flying.push({ startX: p.curX, startY: p.curY, targetX: tx, targetY: ty, progress: 0, speed: 0.008 + Math.random() * 0.006, isReturning: false, rad: p.rad * 1.2, color: p.color, origIdx: i });
+    }
+}
+
+function updateFlying() {
+    for(let i=0;i<flying.length;i++) {
+        let f = flying[i];
+        if(!f.isReturning) {
+            f.progress += f.speed;
+            if(f.progress >= 1) { f.isReturning = true; f.progress = 0; f.startX = f.curX; f.startY = f.curY; }
+            else { let t = f.progress; f.curX = f.startX + (f.targetX - f.startX)*t; f.curY = f.startY + (f.targetY - f.startY)*t; }
+        } else {
+            f.progress += f.speed * 0.7;
+            if(f.progress >= 1) { let p = particles[f.origIdx]; if(p) { f.curX = p.curX; f.curY = p.curY; } flying.splice(i,1); i--; continue; }
+            else { let p = particles[f.origIdx]; if(p) { let tx = p.curX, ty = p.curY, t = f.progress; f.curX = f.startX + (tx - f.startX)*t; f.curY = f.startY + (ty - f.startY)*t; } else { flying.splice(i,1); i--; } }
+        }
+    }
+}
+
+function updatePositions(dt, nowSec) {
+    if(isCollecting) { updateCollect(dt); return; }
+    let bass = volume * 1.0;
+    let vibX = (Math.random()-0.5)*bass*1.2, vibY = (Math.random()-0.5)*bass*1.2;
+    glow = bass * 0.9;
+    for(let p of particles) { let scale = 1 + bass*0.6; p.rad = p.baseRad * scale; if(p.rad > 3.5) p.rad = 3.5; }
     
-    resize();
+    let attract = false, repel = false, cx = null, cy = null;
+    if(touchMode && touchX!==null) { if(touchMode==='left') attract=true; else repel=true; cx=touchX; cy=touchY; }
+    else if(isLeft) { attract=true; cx=mouseX; cy=mouseY; }
+    else if(isRight) { repel=true; cx=mouseX; cy=mouseY; }
+    
+    if((attract||repel) && cx!==null && isHover) {
+        for(let p of particles) { let f = applyForce(p, cx, cy, attract); let nx = p.curX + f.dx + vibX*0.6, ny = p.curY + f.dy + vibY*0.6; p.curX += (nx-p.curX)*0.85; p.curY += (ny-p.curY)*0.85; }
+    } else if(isHover) {
+        for(let p of particles) {
+            let orb = getOrbit(p, globalTime);
+            let dx = orb.x-Cx, dy = orb.y-Cy, distC = Math.hypot(dx,dy);
+            if(distC>0.01) { let nx=dx/distC, ny=dy/distC, shift=bass*16; orb.x += nx*shift; orb.y += ny*shift; }
+            orb.x += vibX*0.7; orb.y += vibY*0.7;
+            let dxp = orb.x - p.curX, dyp = orb.y - p.curY;
+            if(Math.abs(dxp)>0.3||Math.abs(dyp)>0.3) { p.curX += dxp*0.12; p.curY += dyp*0.12; } else { p.curX=orb.x; p.curY=orb.y; }
+        }
+    } else {
+        for(let p of particles) {
+            let tx = p.origX + vibX*0.8, ty = p.origY + vibY*0.8;
+            let dx = tx-p.curX, dy = ty-p.curY;
+            if(Math.abs(dx)>0.3||Math.abs(dy)>0.3) { p.curX += dx*0.12; p.curY += dy*0.12; } else { p.curX=tx; p.curY=ty; }
+        }
+    }
+}
+
+function draw() {
+    ctx.fillStyle="#03050a"; ctx.fillRect(0,0,W,H);
+    for(let p of particles) { ctx.beginPath(); ctx.arc(p.curX,p.curY,p.rad,0,Math.PI*2); ctx.fillStyle=p.color; ctx.fill(); }
+    for(let f of flying) { ctx.beginPath(); ctx.arc(f.curX,f.curY,f.rad*1.1,0,Math.PI*2); ctx.fillStyle=f.color; ctx.fill(); ctx.beginPath(); ctx.arc(f.curX,f.curY,f.rad*0.7,0,Math.PI*2); ctx.fillStyle="#FFEECC"; ctx.fill(); }
+    ctx.globalCompositeOperation="lighter";
+    let r=255, g=200+Math.floor(glow*55), b=200+Math.floor(glow*55);
+    if(glow>0.3) { g=160+Math.floor(glow*70); b=210+Math.floor(glow*45); }
+    let glowColor = `rgba(${r},${g},${b},0.38)`;
+    for(let p of particles) { ctx.beginPath(); ctx.arc(p.curX,p.curY,p.rad*1.8,0,Math.PI*2); ctx.fillStyle=glowColor; ctx.fill(); }
+    ctx.globalCompositeOperation="source-over";
+}
+
+function animation(nowMs) {
+    if(!lastTime) { lastTime=nowMs; requestAnimationFrame(animation); return; }
+    let dt=Math.min(0.033,(nowMs-lastTime)/1000);
+    if(dt<=0) { lastTime=nowMs; requestAnimationFrame(animation); return; }
+    let any = isLeft || isRight || touchMode;
+    if(any && isHover && (mouseX!==null||touchX!==null) && !isCollecting) { forceMult = Math.min(FORCE_MAX, forceMult + FORCE_ACC*dt); }
+    else { forceMult = Math.max(0, forceMult - FORCE_DEC*dt); }
+    if(!any && isHover && !isCollecting) globalTime += dt;
+    lastTime=nowMs;
+    updatePositions(dt, nowMs/1000);
+    updateFlying();
+    emitStars(nowMs);
+    draw();
     animFrame = requestAnimationFrame(animation);
-    autoplay();
-})();
+}
+
+// ========== СОБЫТИЯ МЫШИ ==========
+function onMouseEnter(e) { isHover = true; computeExplode(); updateMouse(e); }
+function onMouseLeave() { isHover = false; isLeft = isRight = false; mouseX = mouseY = null; forceMult = 0; }
+function onMouseMove(e) { if(isHover) updateMouse(e); }
+function updateMouse(e) { let rect=canvas.getBoundingClientRect(); let sx=canvas.width/rect.width, sy=canvas.height/rect.height; mouseX=Math.min(W,Math.max(0,(e.clientX-rect.left)*sx)); mouseY=Math.min(H,Math.max(0,(e.clientY-rect.top)*sy)); }
+function onMouseDown(e) { e.preventDefault(); if(e.button===0) { isLeft=true; isRight=false; } else if(e.button===2) { isRight=true; isLeft=false; } updateMouse(e); }
+function onMouseUp(e) { if(e.button===0) isLeft=false; else if(e.button===2) isRight=false; }
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('mouseenter',onMouseEnter); canvas.addEventListener('mouseleave',onMouseLeave);
+canvas.addEventListener('mousemove',onMouseMove); canvas.addEventListener('mousedown',onMouseDown);
+window.addEventListener('mouseup',onMouseUp);
+
+// ========== МОБИЛЬНЫЕ ЖЕСТЫ ==========
+let lastTap = 0;
+function onTouchStart(e) {
+    e.preventDefault();
+    const t = e.touches, now = Date.now();
+    if(t.length===1) {
+        if(now - lastTap < 300) { startCollect(); lastTap=0; return; }
+        lastTap=now;
+        if(!isHover) { isHover=true; computeExplode(); }
+        touchMode = 'left';
+        updateTouch(t[0]);
+    } else if(t.length===2) {
+        lastTap=0;
+        if(!isHover) { isHover=true; computeExplode(); }
+        touchMode = 'right';
+        updateTouchCoords((t[0].clientX+t[1].clientX)/2, (t[0].clientY+t[1].clientY)/2);
+    }
+}
+function onTouchMove(e) { e.preventDefault(); if(isCollecting) return; const t=e.touches; if(t.length===1 && touchMode==='left') updateTouch(t[0]); else if(t.length===2 && touchMode==='right') updateTouchCoords((t[0].clientX+t[1].clientX)/2, (t[0].clientY+t[1].clientY)/2); }
+function onTouchEnd(e) { touchMode=null; touchX=touchY=null; }
+function updateTouch(t) { let rect=canvas.getBoundingClientRect(); let sx=canvas.width/rect.width, sy=canvas.height/rect.height; touchX=Math.min(W,Math.max(0,(t.clientX-rect.left)*sx)); touchY=Math.min(H,Math.max(0,(t.clientY-rect.top)*sy)); mouseX=touchX; mouseY=touchY; }
+function updateTouchCoords(x,y) { let rect=canvas.getBoundingClientRect(); let sx=canvas.width/rect.width, sy=canvas.height/rect.height; touchX=Math.min(W,Math.max(0,(x-rect.left)*sx)); touchY=Math.min(H,Math.max(0,(y-rect.top)*sy)); mouseX=touchX; mouseY=touchY; }
+canvas.addEventListener('touchstart',onTouchStart,{passive:false}); canvas.addEventListener('touchmove',onTouchMove,{passive:false}); canvas.addEventListener('touchend',onTouchEnd); canvas.addEventListener('touchcancel',onTouchEnd);
+
+function resize() { W=window.innerWidth; H=window.innerHeight; canvas.width=W; canvas.height=H; Cx=W/2; Cy=H/2; particles=generateWordParticles(); computeExplode(); for(let p of particles) updateOrbit(p); if(isHover) computeExplode(); isCollecting=false; isLeft=isRight=false; touchMode=null; forceMult=0; globalTime=0; lastTime=0; }
+window.addEventListener('resize',resize);
+
+// ========== UI ==========
+const playBtn=document.getElementById('playBtn'), stopBtn=document.getElementById('stopBtn'), srcBtn=document.getElementById('sourceBtn');
+const modal=document.getElementById('sourceModal'), closeModalBtn=document.getElementById('closeModalBtn'), applyTopBtn=document.getElementById('applyTopBtn');
+const stationSearch=document.getElementById('stationSearch'), styleFilter=document.getElementById('styleFilter'), radioListDiv=document.getElementById('radioList');
+const folderInput=document.getElementById('folderInput'), customUrl=document.getElementById('customUrlInput');
+
+function renderList() {
+    let search = stationSearch.value.toLowerCase();
+    let style = styleFilter.value;
+    let filt = stationsData.filter(s => (style === 'all' || s.style === style) && 
+        (s.name.toLowerCase().includes(search) || s.style.toLowerCase().includes(search)));
+    radioListDiv.innerHTML = '';
+    for (let s of filt) {
+        let div = document.createElement('div');
+        div.className = 'radio-item';
+        div.innerHTML = `<span class="radio-name">${s.name}</span><span class="radio-style">${s.style}</span>`;
+        div.onclick = () => { setSource(s.url, s.name); closeModalF(); };
+        radioListDiv.appendChild(div);
+    }
+}
+
+function updateStyleFilter() {
+    allStyles = [...new Set(stationsData.map(s => s.style))].sort();
+    styleFilter.innerHTML = '<option value="all">все стили</option>';
+    allStyles.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        styleFilter.appendChild(opt);
+    });
+}
+updateStyleFilter();
+
+stationSearch.addEventListener('input', renderList);
+styleFilter.addEventListener('change', renderList);
+folderInput.addEventListener('change', (e) => { if (e.target.files.length) setFolder(Array.from(e.target.files)); closeModalF(); });
+
+function openModal() { modal.classList.add('active'); renderList(); }
+function closeModalF() { modal.classList.remove('active'); }
+function applyCustom() { let url = customUrl.value.trim(); if (url) setSource(url, url); closeModalF(); }
+
+srcBtn.addEventListener('click', openModal);
+closeModalBtn.addEventListener('click', closeModalF);
+applyTopBtn.addEventListener('click', applyCustom);
+modal.addEventListener('click', (e) => { if (e.target === modal) closeModalF(); });
+playBtn.addEventListener('click', playMusic);
+stopBtn.addEventListener('click', stopMusic);
+
+function autoplay() {
+    audio.play().then(() => {
+        if (!isAudioConnected) initAnalyser();
+        document.getElementById('autoplayHint').style.opacity = '0';
+        onMusicPlay();
+    }).catch(() => {
+        document.getElementById('autoplayHint').style.opacity = '1';
+        let start = () => {
+            playMusic();
+            canvas.removeEventListener('click', start);
+            window.removeEventListener('touchstart', start);
+        };
+        canvas.addEventListener('click', start);
+        window.addEventListener('touchstart', start);
+    });
+}
+
+resize();
+animFrame = requestAnimationFrame(animation);
+autoplay();
 </script>
 </body>
 </html>
