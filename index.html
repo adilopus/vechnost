@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ВЕЧНОСТЬ</title>
     
-    <!-- PWA мета-теги -->
+    <!-- Мета-теги для добавления на главный экран (без PWA) -->
     <meta name="theme-color" content="#03050a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ВЕЧНОСТЬ">
-    <link rel="manifest" href="manifest.json">
+    
     <link rel="icon" type="image/png" id="dynamicFavicon">
     
     <style>
@@ -97,65 +97,7 @@
 </div>
 
 <script>
-// ========== ГЕНЕРАЦИЯ ИКОНОК ДЛЯ PWA ==========
-function generateIconDataURL(size) {
-    const c = document.createElement('canvas');
-    c.width = c.height = size;
-    const x = c.getContext('2d');
-    x.fillStyle = "#03050a";
-    x.fillRect(0, 0, size, size);
-    x.font = `${size * 0.55}px 'Segoe UI', 'Montserrat', 'Times New Roman', serif`;
-    x.textAlign = "center";
-    x.textBaseline = "middle";
-    x.fillStyle = "#FFFFFF";
-    x.shadowBlur = size * 0.04;
-    x.shadowColor = "rgba(255,255,200,0.6)";
-    x.fillText("∞", size/2, size/2);
-    x.shadowBlur = 0;
-    return c.toDataURL('image/png');
-}
-
-const iconSizes = [72, 96, 128, 144, 152, 192, 256, 384, 512];
-const manifestIcons = iconSizes.map(size => ({
-    src: generateIconDataURL(size),
-    sizes: `${size}x${size}`,
-    type: "image/png"
-}));
-
-const manifestData = {
-    name: "ВЕЧНОСТЬ",
-    short_name: "Вечность",
-    description: "Звёздная сингулярность с музыкой",
-    start_url: "/",
-    scope: "/",
-    display: "standalone",
-    theme_color: "#03050a",
-    background_color: "#03050a",
-    icons: manifestIcons
-};
-
-const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
-const manifestUrl = URL.createObjectURL(manifestBlob);
-document.querySelector('link[rel="manifest"]').href = manifestUrl;
-
-// ========== SERVICE WORKER ==========
-if ('serviceWorker' in navigator) {
-    const swCode = `const CACHE_NAME = 'vechnost-v2';
-const urlsToCache = ['/', '/index.html'];
-
-self.addEventListener('install', event => {
-    event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
-    self.skipWaiting();
-});
-
-self.addEventListener('fetch', event => {
-    event.respondWith(caches.match(event.request).then(response => response || fetch(event.request)));
-});`;
-    const swBlob = new Blob([swCode], {type: 'application/javascript'});
-    const swUrl = URL.createObjectURL(swBlob);
-    navigator.serviceWorker.register(swUrl).catch(e => console.log('SW fallback', e));
-}
-
+// ========== FAVICON ==========
 function createFavicon() {
     const c = document.createElement('canvas');
     c.width = c.height = 64;
@@ -174,8 +116,10 @@ function createFavicon() {
 }
 createFavicon();
 
-// ========== СТАНДАРТНЫЙ СПИСОК РАДИОСТАНЦИЙ ==========
+// ========== СПИСОК РАДИОСТАНЦИЙ (ПОЛНЫЙ, 170+ СТАНЦИЙ ИЗ ФАЙЛА) ==========
 const STORAGE_KEY = 'vechnost_stations';
+
+// Стандартный список (компактный формат)
 const DEFAULT_STATIONS_COMPACT = [
     "DFM|http://dfm.hostingradio.ru/dfm96.aacp|Поп/Top 40",
     "Европа Плюс 320|http://europaplus.hostingradio.ru:8014/europaplus320.mp3|Поп/Top 40",
@@ -237,16 +181,115 @@ const DEFAULT_STATIONS_COMPACT = [
     "Radio Record «Record 80-х»|https://radiorecord.hostingradio.ru/198096.aacp|80-е",
     "Radio Record «Рекорд 00-х»|https://radiorecord.hostingradio.ru/200096.aacp|00-е",
     "Radio Record «10's Dance»|https://radiorecord.hostingradio.ru/201096.aacp|Танцы 10-х",
+    "Radio Record «2-step»|https://radiorecord.hostingradio.ru/2step96.aacp|2-step / UK Garage",
+    "Radio Record «Afro House»|https://radiorecord.hostingradio.ru/afro64.aacp|Afro House",
     "Radio Record «Ambient»|https://radiorecord.hostingradio.ru/ambient96.aacp|Ambient",
+    "Radio Record «Armin van Buuren»|https://radiorecord.hostingradio.ru/armin96.aacp|Транс (Armin)",
+    "Radio Record «A State of Trance»|https://radiorecord.hostingradio.ru/asot64.aacp|Транс (ASOT)",
+    "Radio Record «Beach Party»|https://radiorecord.hostingradio.ru/beach64.aacp|Пляжная вечеринка",
+    "Radio Record «Big Hits»|https://radiorecord.hostingradio.ru/bighits96.aacp|Танцевальные хиты",
+    "Radio Record «Breaks»|https://radiorecord.hostingradio.ru/brks96.aacp|Breaks",
+    "Radio Record «60's Dance»|https://radiorecord.hostingradio.ru/cadillac96.aacp|Танцы 60-х",
     "Radio Record «Chill-Out»|https://radiorecord.hostingradio.ru/chil96.aacp|Чилл-аут",
+    "Radio Record «Chill House»|https://radiorecord.hostingradio.ru/chillhouse96.aacp|Chill House",
+    "Radio Record «Christmas Chill»|https://radiorecord.hostingradio.ru/christmaschill96.aacp|Рождественский чилл",
+    "Radio Record «Record Classix»|https://radiorecord.hostingradio.ru/classix64.aacp|Классика танца",
+    "Radio Record «EDM»|https://radiorecord.hostingradio.ru/club96.aacp|EDM",
+    "Radio Record «Record Club Show»|https://radiorecord.hostingradio.ru/clubshow64.aacp|Клубное шоу",
+    "Radio Record «Complextro»|https://radiorecord.hostingradio.ru/complextro96.aacp|Complextro",
+    "Radio Record «Darkside»|https://radiorecord.hostingradio.ru/darkside96.aacp|Дарксайд",
+    "Radio Record «Dancecore»|https://radiorecord.hostingradio.ru/dc96.aacp|Дэнскор",
     "Radio Record «Deep»|https://radiorecord.hostingradio.ru/deep96.aacp|Deep House",
-    "Radio Record «Lo-Fi»|https://radiorecord.hostingradio.ru/lofi96.aacp|Lo-Fi",
-    "Radio Record «Rock»|https://radiorecord.hostingradio.ru/rock96.aacp|Рок",
-    "Radio Record «Techno»|https://radiorecord.hostingradio.ru/techno96.aacp|Техно",
-    "Radio Record «Trance Classics»|https://radiorecord.hostingradio.ru/trancehits96.aacp|Trance Классика",
-    "Radio Record «Synthwave»|https://radiorecord.hostingradio.ru/synth96.aacp|Synthwave",
+    "Radio Record «Веснушка FM»|https://radiorecord.hostingradio.ru/deti96.aacp|Детская",
+    "Radio Record «Disco/Funk»|https://radiorecord.hostingradio.ru/discofunk96.aacp|Диско/Фанк",
+    "Radio Record «DJ Gvozd»|https://radiorecord.hostingradio.ru/djgvozd64.aacp|Миксы (DJ Gvozd)",
+    "Radio Record «Dream Dance»|https://radiorecord.hostingradio.ru/dream96.aacp|Dream Dance",
+    "Radio Record «Dream Pop»|https://radiorecord.hostingradio.ru/dreampop96.aacp|Dream Pop",
+    "Radio Record «D'n'B Classics»|https://radiorecord.hostingradio.ru/drumhits96.aacp|DnB Классика",
+    "Radio Record «Dubstep»|https://radiorecord.hostingradio.ru/dub96.aacp|Дабстеп",
+    "Radio Record «EDM Classics»|https://radiorecord.hostingradio.ru/edmhits96.aacp|EDM Классика",
+    "Radio Record «Electro»|https://radiorecord.hostingradio.ru/elect96.aacp|Электро",
     "Radio Record «Eurodance»|https://radiorecord.hostingradio.ru/eurodance96.aacp|Евродэнс",
-    "Radio Record «Record»|https://radiorecord.hostingradio.ru/rr_main96.aacp|Основная (Танцевальная)"
+    "Radio Record «Future Bass»|https://radiorecord.hostingradio.ru/fbass96.aacp|Future Bass",
+    "Radio Record «Feel»|https://radiorecord.hostingradio.ru/feel64.aacp|Feel-музыка",
+    "Radio Record «Future House»|https://radiorecord.hostingradio.ru/fut96.aacp|Future House",
+    "Radio Record «Future Rave»|https://radiorecord.hostingradio.ru/futurerave96.aacp|Future Rave",
+    "Radio Record «Гастарбайтер FM»|https://radiorecord.hostingradio.ru/gast96.aacp|Юмор/Пародия",
+    "Radio Record «GOA/PSY»|https://radiorecord.hostingradio.ru/goa96.aacp|Goa/Psytrance",
+    "Radio Record «Record Gold»|https://radiorecord.hostingradio.ru/gold96.aacp|Золото танцев",
+    "Radio Record «Гоп FM»|https://radiorecord.hostingradio.ru/gop96.aacp|Юмор/Пародия",
+    "Radio Record «Groove/Tribal»|https://radiorecord.hostingradio.ru/groovetribal96.aacp|Groove/Tribal",
+    "Radio Record «David Guetta»|https://radiorecord.hostingradio.ru/guetta96.aacp|David Guetta",
+    "Radio Record «Hard Bass»|https://radiorecord.hostingradio.ru/hbass96.aacp|Hard Bass",
+    "Radio Record «House Classics»|https://radiorecord.hostingradio.ru/houseclss96.aacp|House Классика",
+    "Radio Record «House Hits»|https://radiorecord.hostingradio.ru/househits96.aacp|House Хиты",
+    "Radio Record «На Хайпе»|https://radiorecord.hostingradio.ru/hype96.aacp|Хайп/Тренды",
+    "Radio Record «Hypnotic»|https://radiorecord.hostingradio.ru/hypno96.aacp|Hypnotic",
+    "Radio Record «Innocence»|https://radiorecord.hostingradio.ru/ibiza96.aacp|Ибица/Лаунж",
+    "Radio Record «Bass House»|https://radiorecord.hostingradio.ru/jackin96.aacp|Bass House",
+    "Radio Record «Jungle»|https://radiorecord.hostingradio.ru/jungle96.aacp|Jungle",
+    "Radio Record «Lady Waks»|https://radiorecord.hostingradio.ru/ladywaks64.aacp|Миксы (Lady Waks)",
+    "Radio Record «Latina Dance»|https://radiorecord.hostingradio.ru/latina96.aacp|Латина",
+    "Radio Record «Liquid Funk»|https://radiorecord.hostingradio.ru/liquidfunk96.aacp|Liquid Funk",
+    "Radio Record «Live DJ-sets»|https://radiorecord.hostingradio.ru/livedjsets96.aacp|Живые сеты",
+    "Radio Record «Lo-Fi»|https://radiorecord.hostingradio.ru/lofi96.aacp|Lo-Fi",
+    "Radio Record «Lo-Fi House»|https://radiorecord.hostingradio.ru/lofihouse64.aacp|Lo-Fi House",
+    "Radio Record «Martin Garrix»|https://radiorecord.hostingradio.ru/martingarrix64.aacp|Martin Garrix",
+    "Radio Record «Медляк FM»|https://radiorecord.hostingradio.ru/mdl96.aacp|Медляки",
+    "Radio Record «Маятник Фуко»|https://radiorecord.hostingradio.ru/mf96.aacp|Интеллектуальная",
+    "Radio Record «Minimal/Tech»|https://radiorecord.hostingradio.ru/mini96.aacp|Minimal/Tech",
+    "Radio Record «Megamix»|https://radiorecord.hostingradio.ru/mix96.aacp|Megamix",
+    "Radio Record «Moombahton»|https://radiorecord.hostingradio.ru/mmbt96.aacp|Moombahton",
+    "Radio Record «Midtempo»|https://radiorecord.hostingradio.ru/mt96.aacp|Midtempo",
+    "Radio Record «Нафталин FM»|https://radiorecord.hostingradio.ru/naft96.aacp|Ретро (Нафталин)",
+    "Radio Record «На шашлыки!»|https://radiorecord.hostingradio.ru/nashashlyki96.aacp|Дачная/Поп",
+    "Radio Record «Nejtrino & Baur»|https://radiorecord.hostingradio.ru/nejtrinobaur64.aacp|Миксы (Nejtrino&Baur)",
+    "Radio Record «Neurofunk»|https://radiorecord.hostingradio.ru/neurofunk96.aacp|Neurofunk",
+    "Radio Record «Nu Dance»|https://radiorecord.hostingradio.ru/nudance64.aacp|Nu Dance",
+    "Radio Record «Oliver Heldens»|https://radiorecord.hostingradio.ru/oliverheldens64.aacp|Oliver Heldens",
+    "Radio Record «Organic»|https://radiorecord.hostingradio.ru/organic96.aacp|Organic House",
+    "Radio Record «Party 24/7»|https://radiorecord.hostingradio.ru/party96.aacp|Party",
+    "Radio Record «Phonk»|https://radiorecord.hostingradio.ru/phonk96.aacp|Phonk",
+    "Radio Record «Progressive»|https://radiorecord.hostingradio.ru/progr96.aacp|Прогрессив",
+    "Radio Record «Pirate Station»|https://radiorecord.hostingradio.ru/ps96.aacp|Pirate Station",
+    "Radio Record «Колбасный Цех»|https://radiorecord.hostingradio.ru/pump96.aacp|Клубный бас",
+    "Radio Record «Rap Hits»|https://radiorecord.hostingradio.ru/rap96.aacp|Рэп Хиты",
+    "Radio Record «Rap Classics»|https://radiorecord.hostingradio.ru/rapclassics96.aacp|Рэп Классика",
+    "Radio Record «Rave FM»|https://radiorecord.hostingradio.ru/rave96.aacp|Рейв",
+    "Radio Record «Reggae»|https://radiorecord.hostingradio.ru/reggae96.aacp|Регги",
+    "Radio Record «Remix»|https://radiorecord.hostingradio.ru/rmx96.aacp|Ремиксы",
+    "Radio Record «Rock»|https://radiorecord.hostingradio.ru/rock96.aacp|Рок",
+    "Radio Record «Record»|https://radiorecord.hostingradio.ru/rr_main96.aacp|Основная (Танцевальная)",
+    "Radio Record «Russian Mix»|https://radiorecord.hostingradio.ru/rus96.aacp|Русский микс",
+    "Radio Record «Russian Gold»|https://radiorecord.hostingradio.ru/russiangold96.aacp|Русский золотой",
+    "Radio Record «Russian Hits»|https://radiorecord.hostingradio.ru/russianhits64.aacp|Русские хиты",
+    "Radio Record «Русская Зима»|https://radiorecord.hostingradio.ru/ruszima96.aacp|Русская зимняя",
+    "Radio Record «Руки Вверх!»|https://radiorecord.hostingradio.ru/rv96.aacp|Руки Вверх!",
+    "Radio Record «Супердискотека 90-х»|https://radiorecord.hostingradio.ru/sd9096.aacp|Супердискотека 90-х",
+    "Radio Record «Summer Lounge»|https://radiorecord.hostingradio.ru/summerlounge64.aacp|Summer Lounge",
+    "Radio Record «Summer Dance от Т-Банк»|https://radiorecord.hostingradio.ru/summerparty96.aacp|Summer Dance",
+    "Radio Record «Симфония FM»|https://radiorecord.hostingradio.ru/symph96.aacp|Симфоническая",
+    "Radio Record «Synthwave»|https://radiorecord.hostingradio.ru/synth96.aacp|Synthwave",
+    "Radio Record «Techno»|https://radiorecord.hostingradio.ru/techno96.aacp|Техно",
+    "Radio Record «Technopop»|https://radiorecord.hostingradio.ru/technopop96.aacp|Technopop",
+    "Radio Record «Tech House»|https://radiorecord.hostingradio.ru/techouse96.aacp|Tech House",
+    "Radio Record «Tecktonik»|https://radiorecord.hostingradio.ru/tecktonik96.aacp|Tecktonik",
+    "Radio Record «Hardstyle»|https://radiorecord.hostingradio.ru/teo96.aacp|Hardstyle",
+    "Radio Record «Tiesto»|https://radiorecord.hostingradio.ru/tiesto96.aacp|Tiesto",
+    "Radio Record «Trancemission»|https://radiorecord.hostingradio.ru/tm96.aacp|Trancemission",
+    "Radio Record «TOP 100 EDM»|https://radiorecord.hostingradio.ru/top100edm96.aacp|Топ 100 EDM",
+    "Radio Record «Trance Classics»|https://radiorecord.hostingradio.ru/trancehits96.aacp|Trance Классика",
+    "Radio Record «Trancehouse»|https://radiorecord.hostingradio.ru/trancehouse96.aacp|Trancehouse",
+    "Radio Record «Trap»|https://radiorecord.hostingradio.ru/trap96.aacp|Trap",
+    "Radio Record «Tropical»|https://radiorecord.hostingradio.ru/trop96.aacp|Tropical",
+    "Radio Record «DJ Цветкоff»|https://radiorecord.hostingradio.ru/tsvetkov64.aacp|Миксы (Цветкоff)",
+    "Radio Record «UK Garage»|https://radiorecord.hostingradio.ru/ukgarage96.aacp|UK Garage",
+    "Radio Record «Ultra Music Festival»|https://radiorecord.hostingradio.ru/ultra64.aacp|Ultra Music Fest",
+    "Radio Record «Uplifting»|https://radiorecord.hostingradio.ru/uplift96.aacp|Uplifting",
+    "Radio Record «VIP House»|https://radiorecord.hostingradio.ru/vip96.aacp|VIP House",
+    "Radio Record «Workout»|https://radiorecord.hostingradio.ru/workout96.aacp|Workout",
+    "Radio Record «Black Rap»|https://radiorecord.hostingradio.ru/yo96.aacp|Black Rap",
+    "Русское Радио (другое)|https://rusradio.hostingradio.ru/rusradio128.mp3|Русская поп"
 ];
 
 // Загрузка списка станций из localStorage или использование стандартного
