@@ -96,25 +96,27 @@
 </div>
 
 <script>
-// ========== ГЕНЕРАЦИЯ MANIFEST.JSON (статический) ==========
+// ========== ГЕНЕРАЦИЯ ИКОНОК ДЛЯ PWA ==========
 function generateIconDataURL(size) {
     const c = document.createElement('canvas');
     c.width = c.height = size;
     const x = c.getContext('2d');
+    // Чёрный фон
     x.fillStyle = "#03050a";
     x.fillRect(0, 0, size, size);
+    // Белый символ бесконечности
     x.font = `${size * 0.55}px 'Segoe UI', 'Montserrat', 'Times New Roman', serif`;
     x.textAlign = "center";
     x.textBaseline = "middle";
     x.fillStyle = "#FFFFFF";
-    x.shadowBlur = size * 0.06;
-    x.shadowColor = "rgba(255,255,200,0.8)";
+    x.shadowBlur = size * 0.04;
+    x.shadowColor = "rgba(255,255,200,0.6)";
     x.fillText("∞", size/2, size/2);
     x.shadowBlur = 0;
     return c.toDataURL('image/png');
 }
 
-// Создаём иконки для манифеста
+// Создаём и сохраняем манифест с иконками
 const iconSizes = [72, 96, 128, 144, 152, 192, 256, 384, 512];
 const manifestIcons = iconSizes.map(size => ({
     src: generateIconDataURL(size),
@@ -122,7 +124,6 @@ const manifestIcons = iconSizes.map(size => ({
     type: "image/png"
 }));
 
-// Манифест
 const manifestData = {
     name: "ВЕЧНОСТЬ",
     short_name: "Вечность",
@@ -135,56 +136,36 @@ const manifestData = {
     icons: manifestIcons
 };
 
-// Сохраняем манифест в localStorage и создаём ссылку на него
-localStorage.setItem('pwa-manifest', JSON.stringify(manifestData));
+// Создаём blob для manifest.json и подменяем ссылку
+const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+const manifestUrl = URL.createObjectURL(manifestBlob);
+document.querySelector('link[rel="manifest"]').href = manifestUrl;
 
-// Регистрация Service Worker
+// ========== SERVICE WORKER ==========
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').then(reg => {
-        console.log('SW registered:', reg);
-    }).catch(err => {
-        console.log('SW registration failed:', err);
-    });
-}
-
-// ========== ГЕНЕРАЦИЯ SERVICE WORKER ==========
-const swCode = `const CACHE_NAME = 'vechnost-v2';
+    const swCode = `const CACHE_NAME = 'vechnost-v2';
 const urlsToCache = ['/', '/index.html'];
 
 self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
-    );
+    event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
     self.skipWaiting();
 });
 
 self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request).then(response => {
-            if (response) return response;
-            return fetch(event.request).then(response => {
-                if (!response || response.status !== 200 || response.type !== 'basic') return response;
-                const responseToCache = response.clone();
-                caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, responseToCache);
-                });
-                return response;
-            });
-        })
-    );
+    event.respondWith(caches.match(event.request).then(response => response || fetch(event.request)));
 });`;
-
-// Создаём blob для service worker
-const swBlob = new Blob([swCode], {type: 'application/javascript'});
-const swUrl = URL.createObjectURL(swBlob);
-navigator.serviceWorker.register(swUrl).catch(e => console.log('SW fallback'));
+    const swBlob = new Blob([swCode], {type: 'application/javascript'});
+    const swUrl = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swUrl).catch(e => console.log('SW fallback', e));
+}
 
 // ========== FAVICON ==========
 function createFavicon() {
     const c = document.createElement('canvas');
     c.width = c.height = 64;
     const x = c.getContext('2d');
-    x.clearRect(0, 0, 64, 64);
+    x.fillStyle = "#03050a";
+    x.fillRect(0, 0, 64, 64);
     x.font = "bold 48px 'Segoe UI', 'Montserrat', 'Times New Roman', serif";
     x.textAlign = "center";
     x.textBaseline = "middle";
