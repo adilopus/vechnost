@@ -27,9 +27,25 @@
         .copyright { position: fixed; bottom: 20px; left: 20px; z-index: 100; font-size: 10px; font-weight: 300; letter-spacing: 0.5px; color: rgba(255,255,255,0.35); background: transparent; padding: 4px 8px; border-radius: 20px; pointer-events: none; transition: opacity 0.6s ease; opacity: 1; font-family: monospace; }
         .copyright.hidden { opacity: 0; }
         
+        /* Модальное окно — исправленная верстка */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3,5,10,0.95); backdrop-filter: blur(12px); z-index: 200; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.25s ease; }
         .modal.active { display: flex; opacity: 1; }
-        .modal-content { background: rgba(10,12,18,0.95); border-radius: 28px; padding: 20px 24px; max-width: 800px; width: 90%; max-height: 85vh; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 20px 40px rgba(0,0,0,0.6); transform: scale(0.95); transition: transform 0.25s ease; color: #fff; display: flex; flex-direction: column; }
+        .modal-content { 
+            background: rgba(10,12,18,0.95); 
+            border-radius: 28px; 
+            padding: 20px 24px; 
+            max-width: 800px; 
+            width: 90%; 
+            max-height: 85vh; 
+            border: 1px solid rgba(255,255,255,0.15); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
+            transform: scale(0.95); 
+            transition: transform 0.25s ease; 
+            color: #fff; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden;
+        }
         .modal.active .modal-content { transform: scale(1); }
         .modal-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; }
         .modal-header h3 { font-size: 1.3rem; font-weight: 400; letter-spacing: 1px; }
@@ -38,23 +54,36 @@
         .close-modal:hover { color: white; }
         .apply-top-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 40px; padding: 4px 16px; color: white; cursor: pointer; font-size: 0.75rem; transition: 0.2s; }
         .apply-top-btn:hover { background: rgba(255,255,255,0.25); }
+        
         .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; flex-shrink: 0; }
         .filter-input, .style-select { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); border-radius: 40px; padding: 8px 16px; color: white; font-size: 0.85rem; outline: none; }
         .filter-input { flex: 1; }
         .import-btn, .reset-stations-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 40px; padding: 8px 16px; color: white; cursor: pointer; font-size: 0.75rem; transition: 0.2s; margin-left: 8px; white-space: nowrap; }
         .import-btn:hover, .reset-stations-btn:hover { background: rgba(255,255,255,0.25); }
-        .radio-list-container { flex: 1; min-height: 0; margin-bottom: 20px; }
-        .radio-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 40vh; padding-right: 6px; -webkit-overflow-scrolling: touch; }
+        
+        /* Список станций — прокручивается, не перекрывается */
+        .radio-list-container { flex: 1; min-height: 0; margin: 0 0 16px 0; }
+        .radio-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 35vh; padding-right: 6px; -webkit-overflow-scrolling: touch; }
         .radio-item { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 8px 16px; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
         .radio-item:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.3); }
         .radio-name { font-size: 0.85rem; font-weight: 500; }
         .radio-style { font-size: 0.7rem; opacity: 0.7; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 20px; }
-        .folder-btn { display: inline-block; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 40px; padding: 10px 18px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; text-align: center; width: 100%; margin-bottom: 12px; color: #fff; flex-shrink: 0; }
+        
+        /* Нижняя секция — фиксируется внизу, не перекрывает список */
+        .bottom-section { flex-shrink: 0; margin-top: 8px; }
+        .folder-btn { display: inline-block; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 40px; padding: 10px 18px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; text-align: center; width: 100%; margin-bottom: 12px; color: #fff; }
         .folder-btn:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
-        .custom-url-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; }
+        .custom-url-section { margin-top: 8px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15); }
         .custom-url-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); border-radius: 40px; padding: 10px 16px; color: white; font-size: 0.85rem; margin-bottom: 12px; outline: none; }
-        .import-status { font-size: 0.7rem; text-align: center; margin-top: 8px; color: #aaa; }
-        @media (max-width: 600px) { .modal-content { padding: 16px; width: 95%; } .radio-item { padding: 6px 12px; } .radio-list { max-height: 35vh; } .filter-bar { flex-wrap: wrap; } .import-btn, .reset-stations-btn { margin-left: 0; margin-top: 8px; width: 100%; } }
+        .import-status { font-size: 0.7rem; text-align: center; margin-top: 6px; color: #aaa; }
+        
+        @media (max-width: 600px) { 
+            .modal-content { padding: 16px; width: 95%; } 
+            .radio-item { padding: 6px 12px; } 
+            .radio-list { max-height: 30vh; } 
+            .filter-bar { flex-wrap: wrap; } 
+            .import-btn, .reset-stations-btn { margin-left: 0; margin-top: 8px; width: 100%; } 
+        }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js" defer></script>
 </head>
@@ -77,6 +106,7 @@
                 <button class="close-modal" id="closeModalBtn">×</button>
             </div>
         </div>
+        
         <div class="filter-bar">
             <input type="text" id="stationSearch" placeholder="поиск..." class="filter-input">
             <select id="styleFilter" class="style-select"><option value="all">все стили</option></select>
@@ -84,14 +114,18 @@
             <button id="resetStationsBtn" class="reset-stations-btn">сбросить</button>
             <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" style="display:none">
         </div>
+        
         <div class="radio-list-container">
             <div id="radioList" class="radio-list"></div>
         </div>
-        <div id="importStatus" class="import-status"></div>
-        <div class="custom-url-section">
+        
+        <div class="bottom-section">
+            <div id="importStatus" class="import-status"></div>
             <label class="folder-btn" for="folderInput">выбрать папку</label>
             <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none">
-            <input type="text" id="customUrlInput" class="custom-url-input" placeholder="или вставьте прямой URL потока">
+            <div class="custom-url-section">
+                <input type="text" id="customUrlInput" class="custom-url-input" placeholder="или вставьте прямой URL потока">
+            </div>
         </div>
     </div>
 </div>
@@ -119,7 +153,6 @@ document.getElementById('dynamicFavicon').href = createIconDataURL(64);
 document.getElementById('appleTouchIcon').href = createIconDataURL(180);
 
 // ========== ОПТИМИЗИРОВАННАЯ ЗАГРУЗКА ==========
-// Откладываем инициализацию анимации на следующий кадр
 requestAnimationFrame(() => {
     initApp();
 });
@@ -404,7 +437,7 @@ function initApp() {
         }
     });
     
-    // ========== АНИМАЦИЯ ==========
+    // ========== АНИМАЦИЯ (сокращена, но полностью рабочая) ==========
     const canvas = document.getElementById('starCanvas');
     const ctx = canvas.getContext('2d');
     let W, H, Cx, Cy;
@@ -723,14 +756,6 @@ function initApp() {
     animFrame = requestAnimationFrame(animation);
     autoplay();
 }
-
-// Убираем "зависание" — показываем подсказку, если долго загружается
-setTimeout(() => {
-    if (!window._animationStarted) {
-        const hint = document.getElementById('autoplayHint');
-        if (hint) hint.style.opacity = '1';
-    }
-}, 3000);
 </script>
 </body>
 </html>
