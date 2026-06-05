@@ -11,7 +11,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ВЕЧНОСТЬ">
     
+    <!-- Иконки для всех устройств -->
     <link rel="icon" type="image/png" id="dynamicFavicon">
+    <link rel="apple-touch-icon" id="appleTouchIcon">
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
@@ -97,29 +99,35 @@
 </div>
 
 <script>
-// ========== FAVICON ==========
-function createFavicon() {
+// ========== ГЕНЕРАЦИЯ ИКОНОК (БЕЛЫЙ ∞ НА ЧЁРНОМ ФОНЕ) ==========
+function createIconDataURL(size) {
     const c = document.createElement('canvas');
-    c.width = c.height = 64;
+    c.width = c.height = size;
     const x = c.getContext('2d');
     x.fillStyle = "#03050a";
-    x.fillRect(0, 0, 64, 64);
-    x.font = "bold 48px 'Segoe UI', 'Montserrat', 'Times New Roman', serif";
+    x.fillRect(0, 0, size, size);
+    x.font = `${size * 0.55}px 'Segoe UI', 'Montserrat', 'Times New Roman', serif`;
     x.textAlign = "center";
     x.textBaseline = "middle";
     x.fillStyle = "#FFFFFF";
-    x.shadowBlur = 4;
-    x.shadowColor = "rgba(255,255,200,0.8)";
-    x.fillText("∞", 32, 34);
+    x.shadowBlur = size * 0.04;
+    x.shadowColor = "rgba(255,255,200,0.6)";
+    x.fillText("∞", size/2, size/2);
     x.shadowBlur = 0;
-    document.getElementById('dynamicFavicon').href = c.toDataURL('image/png');
+    return c.toDataURL('image/png');
 }
-createFavicon();
 
-// ========== СПИСОК РАДИОСТАНЦИЙ (ПОЛНЫЙ, 170+ СТАНЦИЙ ИЗ ФАЙЛА) ==========
+// Устанавливаем favicon (64px)
+const faviconLink = document.getElementById('dynamicFavicon');
+faviconLink.href = createIconDataURL(64);
+
+// Устанавливаем Apple Touch Icon (180px для iPhone)
+const appleIconLink = document.getElementById('appleTouchIcon');
+appleIconLink.href = createIconDataURL(180);
+
+// ========== СПИСОК РАДИОСТАНЦИЙ ==========
 const STORAGE_KEY = 'vechnost_stations';
 
-// Стандартный список (компактный формат)
 const DEFAULT_STATIONS_COMPACT = [
     "DFM|http://dfm.hostingradio.ru/dfm96.aacp|Поп/Top 40",
     "Европа Плюс 320|http://europaplus.hostingradio.ru:8014/europaplus320.mp3|Поп/Top 40",
@@ -292,7 +300,6 @@ const DEFAULT_STATIONS_COMPACT = [
     "Русское Радио (другое)|https://rusradio.hostingradio.ru/rusradio128.mp3|Русская поп"
 ];
 
-// Загрузка списка станций из localStorage или использование стандартного
 function loadStations() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -369,7 +376,7 @@ function importFromExcel(file) {
         allStyles = [...new Set(stationsData.map(s => s.style))].sort();
         updateStyleFilter();
         renderList();
-        importStatus.textContent = `✅ Импортировано ${newStations.length} станций! Сохранено на вашем устройстве.`;
+        importStatus.textContent = `✅ Импортировано ${newStations.length} станций!`;
         setTimeout(() => { importStatus.textContent = ''; }, 4000);
     };
     reader.readAsArrayBuffer(file);
